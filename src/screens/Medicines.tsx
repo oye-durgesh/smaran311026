@@ -6,7 +6,8 @@ import { AddCircle, ReviewCard, StatusPill, timesText } from '../components/Medi
 import { Back, BottomNav, C, Chev, Chip, DemoTag, Dialog, Field, Label, MedIcon, ModeLine, PillBtn, Row, Screen, SectionLabel, TextLink, useToast } from '../components/ui';
 import Gen from './Gen';
 import * as med from '../services/medicineService';
-import { fmtTime, fmtTimeShort, nextLabel, to24 } from '../services/reminderService';
+import { fmtTime, fmtTimeShort, nextLabel } from '../services/reminderService';
+import { FREQ_OPTIONS, normalizeClock, resizeTimes, SUGGESTED_TOD, validateTimes } from '../services/scheduleUtils';
 import type { FoodInstruction, Frequency, Medicine, TimeOfDay } from '../types';
 import { SAMPLE_MED_VOICE } from '../data/voiceSamples';
 
@@ -131,16 +132,17 @@ function NoExtraction() {
 }
 
 // ---------- Schedule editor (11) ----------
-const FREQ: Frequency[] = ['Once daily', 'Twice daily', 'Thrice', 'Custom'];
+const FREQ: Frequency[] = FREQ_OPTIONS;
 const TOD: TimeOfDay[] = ['Morning', 'Afternoon', 'Evening', 'Night'];
 const FOOD: FoodInstruction[] = ['Before food', 'With food', 'After food', 'No instruction'];
-const countFor = (f: Frequency, cur: number) => (f === 'Once daily' ? 1 : f === 'Twice daily' ? 2 : f === 'Thrice' ? 3 : Math.max(cur, 1));
 
-function TimePill({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
+function TimeSlot({ value, onChange, label, index }: { value: string; onChange: (v: string) => void; label: string; index: number }) {
+  const clock = normalizeClock(value) ?? value;
   return (
-    <label style={{ marginTop: 12, height: 48, padding: '0 16px', background: '#fff', border: `1px solid ${C.line}`, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <span style={{ fontSize: 15, fontWeight: 500 }}>{fmtTime(value)}</span>
-      <input aria-label={label} type="time" value={value} onChange={(e) => e.target.value && onChange(e.target.value)} style={{ border: 0, background: 'transparent', font: 'inherit', fontSize: 13, color: C.faint }} />
+    <label className="inp" style={{ marginTop: 10, height: 56 }}>
+      <span style={{ fontSize: 13, color: C.faint, minWidth: 58 }}>Dose {index + 1}</span>
+      <span style={{ fontSize: 15, fontWeight: 500, flex: 1 }}>{clock ? fmtTime(clock) : 'Choose time'}</span>
+      <input aria-label={label} type="time" step={60} value={clock} onChange={(e) => onChange(normalizeClock(e.target.value) ?? e.target.value)} style={{ border: 0, background: 'transparent', font: 'inherit', fontSize: 16, color: C.ink, width: 118 }} />
     </label>
   );
 }
@@ -154,17 +156,17 @@ export function ScheduleEditor() {
   const m: Medicine | undefined = fromRx ? state.extraction?.items.find((x) => x.id === id) : state.medicines.find((x) => x.id === id);
   const [f, setF] = useState<Medicine | undefined>(m);
   const [foodTouched, setFoodTouched] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
   if (!m || !f) return <Missing />;
   const needsFood = fromRx && m.status === 'needs_review' && !foodTouched && m.food === 'No instruction';
-  const set = (p: Partial<Medicine>) => setF({ ...f, ...p });
-  const setFreq = (fr: Frequency) => {
-    const n = countFor(fr, f.times.length);
-    const base = med.timesFor(fr, f.timeOfDay);
-    set({ frequency: fr, times: Array.from({ length: n }, (_, i) => f.times[i] ?? base[i] ?? '20:00') });
-  };
+  const set = (p: Partial<Medicine>) => { setErr(null); setF({ ...f, ...p }); };
+  const setFreq = (fr: Frequency) => set({ frequency: fr, times: resizeTimes(fr, f.times, f.timeOfDay) });
   const save = () => {
-    if (fromRx) update((s) => med.confirmExtracted(s, f.id, f));
-    else update((s) => med.updateMedicine(s, f.id, { ...f, status: f.status === 'paused' ? 'paused' : 'ready' }));
+    const checked = validateTimes(f.times);
+    if (checked.error) { setErr(checked.error); return; }
+    const next = { ...f, times: checked.times };
+    if (fromRx) update((s) => med.confirmExtracted(s, f.id, next));
+    else update((s) => med.updateMedicine(s, f.id, { ...next, status: f.status === 'paused' ? 'paused' : 'ready' }));
     nav(-1);
   };
   return (
@@ -178,9 +180,11 @@ export function ScheduleEditor() {
       <Label>Dose</Label><Field value={f.dose} onChange={(v) => set({ dose: v })} placeholder="e.g. 1 tablet" />
       <Label>Frequency</Label>
       <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>{FREQ.map((x) => <Chip key={x} on={f.frequency === x} onClick={() => setFreq(x)}>{x}</Chip>)}</div>
-      <Label>Time of day</Label>
-      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>{TOD.map((x) => <Chip key={x} on={f.timeOfDay === x} onClick={() => set({ timeOfDay: x, times: f.times.map((t, i) => (i === 0 ? med.timesFor('Once daily', x)[0] : t)) })}>{x}</Chip>)}</div>
-      {f.times.map((t, i) => <TimePill key={i} label={`Reminder time ${i + 1}`} value={t} onChange={(v) => set({ times: f.times.map((o, j) => (j === i ? v : o)) })} />)}
+      <Label>Dose times</Label>
+      <div style={{ fontSize: 12, color: C.faint, marginTop: 6 }}>Pick the exact clock time for each dose. Morning–Night are only suggestions.</div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>{TOD.map((x) => <Chip key={x} on={false} onClick={() => set({ timeOfDay: x, times: f.times.map((t, i) => (i === 0 ? SUGGESTED_TOD[x] : t)) })}>{x}</Chip>)}</div>
+      {f.times.map((t, i) => <TimeSlot key={i} index={i} label={`Dose ${i + 1} time`} value={t} onChange={(v) => set({ times: f.times.map((o, j) => (j === i ? v : o)) })} />)}
+      {err && <div role="alert" style={{ fontSize: 13, color: C.terra, marginTop: 10 }}>{err}</div>}
       {f.frequency === 'Custom' && (
         <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
           <TextLink onClick={() => set({ times: [...f.times, '12:00'] })}>+ Add time</TextLink>
@@ -294,7 +298,7 @@ export function MedicinesList() {
               <MedIcon g={m.gradient} size={44} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 500 }}>{med.medicineLabel(m)} {m.demo && <DemoTag label="DEMO" />}</div>
-                <div style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>{m.frequency} · {m.food === 'No instruction' ? m.timeOfDay : m.food}</div>
+                <div style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>{m.frequency} · {timesText(m)}</div>
                 <div style={{ fontSize: 12, color: m.status === 'ready' ? C.sage : C.terra, marginTop: 4 }}>{m.status === 'ready' ? nextLabel(state, m) : m.status === 'paused' ? 'Ⅱ Paused' : '! Needs review'}</div>
               </div>
               <Chev />
@@ -393,14 +397,20 @@ export function AddManual() {
   const [dose, setDose] = useState(seed?.dose ?? '');
   const [frequency, setFrequency] = useState<Frequency>(seed?.frequency ?? 'Once daily');
   const [tod, setTod] = useState<TimeOfDay>('Morning');
+  const [times, setTimes] = useState<string[]>(() => med.timesFor(seed?.frequency ?? 'Once daily', 'Morning'));
   const [food, setFood] = useState<FoodInstruction | null>(seed?.food ?? null);
   const [duration, setDuration] = useState<'Ongoing' | 'Fixed course'>('Ongoing');
+  const [courseDays, setCourseDays] = useState('');
+  const [err, setErr] = useState<string | null>(null);
   const ok = name.trim().length > 1 && strength.trim() && food;
+  const setFreq = (fr: Frequency) => { setFrequency(fr); setTimes(resizeTimes(fr, times, tod)); setErr(null); };
   const submit = () => {
     if (!ok || busy) return;
+    const checked = validateTimes(times);
+    if (checked.error) { setErr(checked.error); return; }
     setBusy(true);
     try {
-      const input = { name, strength, dose, frequency, timeOfDay: tod, food: food!, duration };
+      const input = { name, strength, dose, frequency, timeOfDay: tod, times: checked.times, food: food!, duration, courseDays: duration === 'Fixed course' ? Number(courseDays) || undefined : undefined };
       update((s) => (fromRx ? med.addExtractedManual(s, input) : med.addMedicine(s, input)));
       toast.show(`Added ${name.trim()} for ${profile.name}`);
       nav(fromRx ? '/medicines/review' : '/medicines', { replace: true });
@@ -416,14 +426,24 @@ export function AddManual() {
       <Label>Strength</Label><Field value={strength} onChange={setStrength} placeholder="e.g. 50mg" />
       <Label>Dose</Label><Field value={dose} onChange={setDose} placeholder="e.g. 1 tablet" />
       <Label>Frequency</Label>
-      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>{FREQ.map((x) => <Chip key={x} on={frequency === x} onClick={() => setFrequency(x)}>{x}</Chip>)}</div>
-      <Label>Time</Label>
-      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>{TOD.map((x) => <Chip key={x} on={tod === x} onClick={() => setTod(x)}>{x}</Chip>)}</div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>{FREQ.map((x) => <Chip key={x} on={frequency === x} onClick={() => setFreq(x)}>{x}</Chip>)}</div>
+      <Label>Dose times</Label>
+      <div style={{ fontSize: 12, color: C.faint, marginTop: 6 }}>Exact clock time for each dose. Morning–Night are suggestions only.</div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>{TOD.map((x) => <Chip key={x} on={false} onClick={() => { setTod(x); setTimes(times.map((t, i) => (i === 0 ? SUGGESTED_TOD[x] : t))); }}>{x}</Chip>)}</div>
+      {times.map((t, i) => <TimeSlot key={i} index={i} label={`Dose ${i + 1} time`} value={t} onChange={(v) => { setTimes(times.map((o, j) => (j === i ? v : o))); setErr(null); }} />)}
+      {frequency === 'Custom' && (
+        <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+          <TextLink onClick={() => setTimes([...times, '12:00'])}>+ Add time</TextLink>
+          {times.length > 1 && <TextLink color={C.err} onClick={() => setTimes(times.slice(0, -1))}>Remove last</TextLink>}
+        </div>
+      )}
+      {err && <div role="alert" style={{ fontSize: 13, color: C.terra, marginTop: 10 }}>{err}</div>}
       <Label>Food instructions</Label>
       <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>{FOOD.map((x) => <Chip key={x} on={food === x} onClick={() => setFood(x)}>{x}</Chip>)}</div>
       {!food && <div style={{ fontSize: 12, color: C.faint, marginTop: 8 }}>Please choose one — we don't guess.</div>}
       <Label>Duration</Label>
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>{(['Ongoing', 'Fixed course'] as const).map((x) => <Chip key={x} on={duration === x} onClick={() => setDuration(x)}>{x}</Chip>)}</div>
+      {duration === 'Fixed course' && <Field value={courseDays} inputMode="numeric" onChange={setCourseDays} placeholder="Number of days" />}
     </Screen>
     {toast.node}
     </>

@@ -8,6 +8,7 @@ import type { Settings } from '../types';
 import { backendConfigured, EMAIL_RE, MIN_PASSWORD, signInEmail, signUpEmail } from '../services/backend';
 import { startSync } from '../services/sync';
 import { blankLiveState } from '../data/demoData';
+import { requestBrowserNotifications } from '../services/notifyService';
 
 export function Welcome() {
   const nav = useNavigate();
@@ -191,7 +192,11 @@ export function Profile() {
 export function PermNotifications() {
   const nav = useNavigate();
   const { update } = useStore();
-  const go = (allowed: boolean) => () => { update((s) => ({ ...s, settings: { ...s.settings, notificationsAllowed: allowed } })); nav('/permissions/microphone'); };
+  const go = (allowed: boolean) => () => {
+    const next = () => nav('/permissions/microphone');
+    if (!allowed) { update((s) => ({ ...s, settings: { ...s.settings, notificationsAllowed: false } })); next(); return; }
+    void requestBrowserNotifications().then((ok) => { update((s) => ({ ...s, settings: { ...s.settings, notificationsAllowed: ok } })); next(); });
+  };
   return <Gen id="06" actions={{ 'Allow Notifications': go(true), 'Not now': go(false) }} />;
 }
 export function PermMicrophone() {

@@ -192,8 +192,12 @@ export const blankLiveState = (name = 'You'): AppState => {
   };
 };
 
-/** Fresh install: nothing set up, onboarding not done. */
+/** Fresh install: empty family, onboarding not done. Demo sample data is loaded only via Reset demo. */
 export const createBlankState = (): AppState => {
-  const s = createDemoState();
-  return { ...s, onboarding: { done: false, name: '', phone: '', purpose: 'self' } };
+  const s = blankLiveState('You');
+  return {
+    ...s,
+    onboarding: { done: false, name: '', phone: '', purpose: 'self' },
+    profiles: [{ id: 'self', name: 'You', relation: 'Me', initial: 'Y' }],
+  };
 };

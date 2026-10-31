@@ -5,6 +5,7 @@
 import type { AppState, Profile, ProfileId, ReminderEvent } from '../types'
 import { backendConfigured, currentSession } from './backend'
 import { memberId } from './mapping'
+import { scheduleRowId } from './scheduleUtils'
 import { deleteRemote, liveUserId, persistNow, schedulePush } from './sync'
 
 export type DataMode = 'demo' | 'live'
@@ -36,7 +37,18 @@ export async function persistFromChange(prev: AppState, next: AppState): Promise
   if (!liveUserId()) return
   if (dataSnap(prev) === dataSnap(next)) return
   const uid = liveUserId()!
-  for (const m of gone(prev.medicines, next.medicines)) await deleteRemote('medicines', m.id)
+  for (const m of gone(prev.medicines, next.medicines)) {
+    await deleteRemote('medicines', m.id)
+    await deleteRemote('medicine_schedules', `sch_${m.id}`)
+    for (const t of m.times) await deleteRemote('medicine_schedules', scheduleRowId(m.id, t))
+  }
+  for (const n of next.medicines) {
+    const p = prev.medicines.find((x) => x.id === n.id)
+    if (!p) continue
+    for (const t of p.times) {
+      if (!n.times.includes(t)) await deleteRemote('medicine_schedules', scheduleRowId(n.id, t))
+    }
+  }
   for (const e of gone(prev.events, next.events)) await deleteRemote('member_reminders', e.id)
   for (const r of gone(prev.readings, next.readings)) await deleteRemote('health_readings', r.id)
   for (const a of gone(prev.appointments, next.appointments)) await deleteRemote('member_appointments', a.id)

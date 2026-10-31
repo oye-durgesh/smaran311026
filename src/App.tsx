@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { StoreProvider } from './data/store';
 import AppRoutes from './navigation/routes';
+import ReminderRuntime from './components/ReminderRuntime';
 import { backendConfigured, onAuthEvent } from './services/backend';
 import { startSync, stopSync } from './services/sync';
 
@@ -24,6 +25,7 @@ export default function App() {
     <StoreProvider>
       <BrowserRouter>
         <AuthBridge />
+        <ReminderRuntime />
         <AppRoutes />
       </BrowserRouter>
     </StoreProvider>

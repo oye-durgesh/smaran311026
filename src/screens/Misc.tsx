@@ -9,6 +9,7 @@ import { isoDate } from '../data/demoData';
 import { liveFlag } from '../services/dataService';
 import { stopSync } from '../services/sync';
 import { signOut as authSignOut } from '../services/backend';
+import { notificationsSupported, requestBrowserNotifications } from '../services/notifyService';
 
 const fmtAppt = (iso: string) => new Date(iso).toLocaleString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).replace(',', ',').replace(' at', ' ·');
 
@@ -193,8 +194,18 @@ export function Settings() {
             </>)}
             {panel === 'notifs' && (<>
               <div className="sf" style={{ fontSize: 20 }}>Notifications & sounds</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}><span style={{ flex: 1, fontSize: 15 }}>Allow notifications</span><Toggle on={st.notificationsAllowed} label="Allow notifications" onChange={(v) => set({ notificationsAllowed: v })} /></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}><span style={{ flex: 1, fontSize: 15 }}>Allow browser notifications</span><Toggle on={st.notificationsAllowed} label="Allow browser notifications" onChange={(v) => {
+                if (!v) { set({ notificationsAllowed: false }); return; }
+                void requestBrowserNotifications().then((ok) => {
+                  set({ notificationsAllowed: ok });
+                  if (!ok) toast.show(notificationsSupported() ? 'Browser blocked notifications' : 'This browser cannot show notifications');
+                });
+              }} /></div>
               <Label>Reminder tone</Label><Choice options={['Gentle', 'Standard'] as const} value={st.reminderTone} onChange={(v) => set({ reminderTone: v })} />
+              <div style={{ fontSize: 12, color: C.faint, marginTop: 14, lineHeight: 1.45 }}>
+                While Smaran is open, dose reminders appear in the app at the exact clock time you set. Browser banners appear only if you allow them here.
+                If you close this tab, reminders cannot be delivered — that needs a push service Smaran has not set up.
+              </div>
             </>)}
             {panel === 'quiet' && (<>
               <div className="sf" style={{ fontSize: 20 }}>Quiet hours</div>

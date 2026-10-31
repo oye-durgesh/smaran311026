@@ -1,17 +1,12 @@
 import type { AppState, FoodInstruction, Frequency, Medicine, ProfileId, TimeOfDay } from '../types';
-import { demoExtraction } from '../data/demoData';
+import { demoExtraction, isoDate } from '../data/demoData';
 import { liveFlag } from './dataService';
 import { regenerateEvents } from './reminderService';
+import { normalizeFrequency, suggestedTimes, validateTimes } from './scheduleUtils';
 
 export const medicineLabel = (m: Pick<Medicine, 'name' | 'strength'>) => `${m.name} ${m.strength}`.trim();
 
-export const timesFor = (frequency: Frequency, tod: TimeOfDay): string[] => {
-  const base: Record<TimeOfDay, string> = { Morning: '08:00', Afternoon: '14:00', Evening: '18:00', Night: '21:00' };
-  // Twice/thrice defaults are only *proposals*; user must confirm them before activation.
-  if (frequency === 'Twice daily') return [base[tod], '20:00'];
-  if (frequency === 'Thrice') return ['08:00', '14:00', '20:00'];
-  return [base[tod]];
-};
+export const timesFor = (frequency: Frequency, tod: TimeOfDay): string[] => suggestedTimes(normalizeFrequency(frequency), tod);
 
 export const mine = (s: AppState, pid: ProfileId = s.activeProfileId) => s.medicines.filter((m) => m.profileId === pid);
 export const activeMedicines = (s: AppState, pid?: ProfileId) => mine(s, pid).filter((m) => !m.completed);
@@ -36,21 +31,26 @@ export interface MedicineInput {
   times?: string[];
   food: FoodInstruction;
   duration: Medicine['duration'];
+  courseDays?: number;
 }
 
 export function addMedicine(s: AppState, input: MedicineInput): AppState {
+  const frequency = normalizeFrequency(input.frequency);
+  const checked = validateTimes(input.times ?? timesFor(frequency, input.timeOfDay));
+  if (checked.error) return s;
   const m: Medicine = {
     id: uid('med'),
     profileId: s.activeProfileId,
     name: input.name.trim(),
     strength: input.strength.trim(),
     dose: input.dose.trim() || '1 tablet',
-    frequency: input.frequency,
+    frequency,
     timeOfDay: input.timeOfDay,
-    times: input.times ?? timesFor(input.frequency, input.timeOfDay),
+    times: checked.times,
     food: input.food,
     duration: input.duration,
-    startedOn: new Date().toISOString().slice(0, 10),
+    courseDays: input.courseDays,
+    startedOn: isoDate(new Date()),
     status: 'ready', // user entered it directly and confirmed with "Add medicine"
     gradient: ['#E7EDE2', '#B5C4A0'],
     demo: liveFlag(),
@@ -59,7 +59,17 @@ export function addMedicine(s: AppState, input: MedicineInput): AppState {
 }
 
 export function updateMedicine(s: AppState, id: string, patch: Partial<Medicine>): AppState {
-  return regenerateEvents({ ...s, medicines: s.medicines.map((m) => (m.id === id ? { ...m, ...patch } : m)) });
+  const next = s.medicines.map((m) => {
+    if (m.id !== id) return m;
+    const merged = { ...m, ...patch, frequency: normalizeFrequency(patch.frequency ?? m.frequency) };
+    if (patch.times) {
+      const checked = validateTimes(patch.times);
+      if (checked.error) return m;
+      merged.times = checked.times;
+    }
+    return merged;
+  });
+  return regenerateEvents({ ...s, medicines: next });
 }
 
 export function removeMedicine(s: AppState, id: string): AppState {
@@ -98,8 +108,8 @@ export function removeExtracted(s: AppState, id: string): AppState {
 export function addExtractedManual(s: AppState, m: MedicineInput): AppState {
   if (!s.extraction) return s;
   const item: Medicine = {
-    id: uid('x'), profileId: s.activeProfileId, ...m, name: m.name.trim(), times: m.times ?? timesFor(m.frequency, m.timeOfDay),
-    startedOn: new Date().toISOString().slice(0, 10), status: 'needs_review', gradient: ['#E7EDE2', '#B5C4A0'],
+    id: uid('x'), profileId: s.activeProfileId, ...m, name: m.name.trim(), frequency: normalizeFrequency(m.frequency), times: validateTimes(m.times ?? timesFor(m.frequency, m.timeOfDay)).times,
+    startedOn: isoDate(new Date()), status: 'needs_review', gradient: ['#E7EDE2', '#B5C4A0'],
   };
   return { ...s, extraction: { ...s.extraction, items: [...s.extraction.items, item] } };
 }

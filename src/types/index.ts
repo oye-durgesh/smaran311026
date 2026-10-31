@@ -9,7 +9,7 @@ export interface Profile {
 }
 
 export type FoodInstruction = 'Before food' | 'With food' | 'After food' | 'No instruction';
-export type Frequency = 'Once daily' | 'Twice daily' | 'Thrice' | 'Custom';
+export type Frequency = 'Once daily' | 'Twice daily' | 'Three times daily' | 'Custom';
 export type TimeOfDay = 'Morning' | 'Afternoon' | 'Evening' | 'Night';
 export type MedicineStatus = 'ready' | 'needs_review' | 'paused' | 'unconfigured';
 

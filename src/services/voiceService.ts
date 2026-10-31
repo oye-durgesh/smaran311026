@@ -193,7 +193,7 @@ export async function tryLiveCall(opts: Parameters<VoiceService['tryLiveCall']>[
     resetVoiceDiag()
     voiceDiag.who = opts.profileId
     const ident = await resolveVoiceIdentity(opts.profileId)
-    const sess = await callFunction<{ signedUrl?: string; agent?: string; personId?: string }>('elevenlabs-session', { personId: ident.personId })
+    const sess = await callFunction<{ signedUrl?: string; agent?: string; personId?: string; toolSession?: string }>('elevenlabs-session', { personId: ident.personId })
     voiceDiag.fnStatus = 200
     const signedUrl = typeof sess.signedUrl === 'string' ? sess.signedUrl : ''
     voiceDiag.signedUrlReturned = /^(https|wss):\/\//i.test(signedUrl)
@@ -208,7 +208,10 @@ export async function tryLiveCall(opts: Parameters<VoiceService['tryLiveCall']>[
     const conv = await Conversation.startSession({
       signedUrl,
       connectionType: 'websocket',
-      dynamicVariables: { relationship: ident.role, person_id: ident.personId },
+      dynamicVariables: {
+        smaran_session: typeof sess.toolSession === 'string' ? sess.toolSession : '',
+        relationship: ident.role,
+      },
       onConnect: ({ conversationId }) => {
         voiceDiag.wsConnected = true
         voiceDiag.conversationId = conversationId || 'connected'

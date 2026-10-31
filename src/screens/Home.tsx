@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, BellOff, Check, Clock, Heart, Users } from 'lucide-react';
 import { useStore } from '../data/store';
 import { BottomNav, C, Chev, DemoTag, MedIcon, ModeLine, PillBtn, Screen, SectionLabel } from '../components/ui';
-import { DuePill, TakenMark } from '../components/MedicineCards';
+import { DuePill, TakenMark, timesText } from '../components/MedicineCards';
 import ReminderSheet from '../components/ReminderSheet';
-import { eventsFor, fmtTime, missedEvents, nextReminder, markTaken } from '../services/reminderService';
+import { doseFace, eventsFor, fmtTime, missedEvents, nextReminder, markTaken } from '../services/reminderService';
 import * as med from '../services/medicineService';
 import type { Profile, ReminderEvent } from '../types';
 
@@ -97,7 +97,7 @@ export default function Home() {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 500 }}>Notifications are off</div>
               <div style={{ fontSize: 12, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>Sathi can't remind you about medicines until notifications are allowed.</div>
-              <button data-act="1" onClick={() => update((s) => ({ ...s, settings: { ...s.settings, notificationsAllowed: true } }))} style={{ marginTop: 8, padding: '8px 14px', background: C.terra, borderRadius: 999, fontSize: 13, color: '#fff', fontWeight: 500, border: 0, font: 'inherit', cursor: 'pointer' }}>Enable in Settings</button>
+              <button data-act="1" onClick={() => nav('/settings')} style={{ marginTop: 8, padding: '8px 14px', background: C.terra, borderRadius: 999, fontSize: 13, color: '#fff', fontWeight: 500, border: 0, font: 'inherit', cursor: 'pointer' }}>Open Settings</button>
             </div>
           </div>
         )}
@@ -133,7 +133,7 @@ export default function Home() {
               <button data-act="1" onClick={() => setSheet(next)} style={{ marginTop: 12, width: '100%', background: C.peach, borderRadius: 18, padding: 16, display: 'flex', alignItems: 'center', gap: 14, border: 0, font: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
                 <div style={{ width: 48, height: 48, borderRadius: '50%', background: C.orange, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Clock size={24} color="#fff" strokeWidth={1.5} /></div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, color: '#8A6B5D', letterSpacing: '.06em' }}>{next.status === 'snoozed' ? 'SNOOZED' : 'NEXT REMINDER'}</div>
+                  <div style={{ fontSize: 12, color: '#8A6B5D', letterSpacing: '.06em' }}>{(() => { const f = doseFace(next.status, next.date, next.time, new Date(), next.snoozedUntil); return f === 'due' ? 'DUE NOW' : f === 'overdue' || f === 'missed' ? 'OVERDUE' : next.status === 'snoozed' ? 'SNOOZED' : 'NEXT REMINDER'; })()}</div>
                   <div style={{ fontSize: 17, fontWeight: 500, marginTop: 2 }}>{mOf(next) ? med.medicineLabel(mOf(next)!) : (next.title || 'Reminder')}</div>
                   <div style={{ fontSize: 14, color: '#6B4F3D', marginTop: 2 }}>
                     {next.status === 'snoozed' && next.snoozedUntil ? `Again at ${new Date(next.snoozedUntil).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}` : `Today at ${fmtTime(next.time)}`} · {mOf(next) ? (mOf(next)!.food === 'No instruction' ? 'No food instruction' : mOf(next)!.food) : 'Custom'}
@@ -153,15 +153,16 @@ export default function Home() {
               {events.length === 0 && <div style={{ fontSize: 14, color: C.muted }}>No reminders are active yet. Confirm your medicines to start them.</div>}
               {events.map((e) => {
                 const m = mOf(e);
-                const col = e.status === 'taken' ? C.sage : e.status === 'missed' ? C.err : e.status === 'skipped' ? C.faint : C.orange;
+                const face = doseFace(e.status, e.date, e.time, new Date(), e.snoozedUntil);
+                const col = face === 'taken' ? C.sage : face === 'missed' || face === 'overdue' ? C.err : face === 'skipped' ? C.faint : face === 'due' ? C.orange : C.sage;
                 return (
                   <div key={e.id} className="crd" role="button" data-act="1" onClick={() => setSheet(e)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, boxShadow: `inset 3px 0 0 ${col}`, cursor: 'pointer' }}>
                     <MedIcon g={m?.gradient ?? ['#E7EDE2', '#B5C4A0']} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 500 }}>{m ? med.medicineLabel(m) : (e.title || 'Reminder')} {(m?.demo || e.demo) && <DemoTag label="DEMO" />}</div>
-                      <div style={{ fontSize: 12, color: C.muted }}>{fmtTime(e.time)} · {m ? (m.food === 'No instruction' ? m.timeOfDay : m.food) : 'Custom'}</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>{fmtTime(e.time)} · {m ? (m.food === 'No instruction' ? timesText(m) : m.food) : 'Custom'}</div>
                     </div>
-                    {e.status === 'taken' ? <TakenMark label="Taken" /> : e.status === 'missed' ? <span style={{ fontSize: 12, color: C.err }}>! Missed</span> : e.status === 'skipped' ? <span style={{ fontSize: 12, color: C.faint }}>Skipped</span> : <DuePill>{e.status === 'snoozed' ? 'Snoozed' : fmtTime(e.time).replace(':00', '')}</DuePill>}
+                    {face === 'taken' ? <TakenMark label="Taken" /> : face === 'missed' || face === 'overdue' ? <span style={{ fontSize: 12, color: C.err }}>{face === 'overdue' ? '! Overdue' : '! Missed'}</span> : face === 'skipped' ? <span style={{ fontSize: 12, color: C.faint }}>Skipped</span> : <DuePill color={face === 'due' ? C.err : C.orange}>{face === 'snoozed' ? 'Snoozed' : face === 'due' ? 'Due now' : fmtTime(e.time)}</DuePill>}
                   </div>
                 );
               })}

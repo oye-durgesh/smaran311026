@@ -5,7 +5,7 @@ import { useStore } from '../data/store';
 import { AddCircle } from '../components/MedicineCards';
 import { Back, BottomNav, C, Chip, Dialog, Field, Label, ModeLine, PillBtn, Screen, useToast } from '../components/ui';
 import ReminderSheet from '../components/ReminderSheet';
-import { eventsFor, fmtTime, historyFor } from '../services/reminderService';
+import { doseFace, eventsFor, fmtTime, historyFor } from '../services/reminderService';
 import { customReminder, removeReminder } from '../services/dataService';
 import { todayLong } from './Home';
 import { isoDate } from '../data/demoData';
@@ -72,14 +72,16 @@ export function Today() {
         <div style={{ display: 'flex', flexDirection: 'column', marginTop: 24, paddingLeft: 20, borderLeft: `2px solid ${C.line}` }}>
           {[...groups.entries()].map(([t, es]) => {
             const all = es.every((e) => e.status === 'taken');
-            const missed = es.some((e) => e.status === 'missed');
-            const col = all ? C.sage : missed ? C.err : C.orange;
+            const faces = es.map((e) => doseFace(e.status, e.date, e.time, new Date(), e.snoozedUntil));
+            const overdue = faces.some((f) => f === 'missed' || f === 'overdue');
+            const due = faces.some((f) => f === 'due');
+            const col = all ? C.sage : overdue ? C.err : due ? C.orange : C.orange;
             const label = es.map((e) => eventLabel(state, e)).join(' · ');
-            const sub = all ? `Taken at ${new Date(es[0].actedAt ?? Date.now()).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })} (self-reported)` : missed ? 'Missed' : es.every((e) => e.status === 'skipped') ? 'Skipped' : 'Upcoming';
+            const sub = all ? `Taken at ${new Date(es[0].actedAt ?? Date.now()).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })} (self-reported)` : overdue ? 'Overdue' : es.every((e) => e.status === 'skipped') ? 'Skipped' : due ? 'Due now' : 'Upcoming';
             return (
               <button key={t} data-act="1" onClick={() => setSheet(es.find((e) => e.status !== 'taken') ?? es[0])} style={{ position: 'relative', paddingLeft: 20, paddingBottom: 24, background: 'none', border: 0, font: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
                 <div style={{ position: 'absolute', left: -9, top: 2, width: 16, height: 16, borderRadius: '50%', background: all ? C.sage : col, border: all ? 0 : `2px solid ${C.peach}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{all && <Check size={9} color="#fff" strokeWidth={3} />}</div>
-                <div style={{ fontSize: 12, color: all ? C.muted : col, fontWeight: all ? 400 : 500 }}>{fmtTime(t)}{!all && ` · ${missed ? '! Missed' : 'Upcoming'}`}</div>
+                <div style={{ fontSize: 12, color: all ? C.muted : col, fontWeight: all ? 400 : 500 }}>{fmtTime(t)}{!all && ` · ${overdue ? '! Overdue' : due ? 'Due now' : 'Upcoming'}`}</div>
                 <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4 }}>{label}</div>
                 <div style={{ fontSize: 13, color: all ? C.sage : C.muted, marginTop: 2 }}>{sub}</div>
               </button>

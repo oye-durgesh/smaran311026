@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { AppState, Profile } from '../types';
-import { createDemoState } from './demoData';
+import { createBlankState, createDemoState } from './demoData';
 import { storage } from '../services/storage';
-import { regenerateEvents, sweepMissed } from '../services/reminderService';
+import { tickReminders } from '../services/reminderService';
 import { bindSync, liveUserId, startSync, stopSync } from '../services/sync';
 import { bindIdentity } from '../services/identityBind';
 import { backendConfigured } from '../services/backend';
@@ -21,8 +21,8 @@ const Ctx = createContext<Store | null>(null);
 
 const hydrate = (): AppState => {
   const saved = storage.load<AppState>();
-  const base = saved && saved.version === 1 ? saved : createDemoState();
-  return sweepMissed(regenerateEvents(base));
+  const base = saved && saved.version === 1 ? saved : createBlankState();
+  return tickReminders(base);
 };
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -40,8 +40,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.smaranMode = liveUserId() ? 'live' : 'demo';
   }, [state]);
   useEffect(() => {
-    const t = setInterval(() => setState((s) => sweepMissed(s)), 30000);
-    return () => clearInterval(t);
+    const apply = () => setState((s) => {
+      const next = tickReminders(s);
+      if (next !== s) void persistFromChange(s, next).catch(() => undefined);
+      return next;
+    });
+    apply();
+    const onVis = () => { if (document.visibilityState === 'visible') apply(); };
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('focus', apply);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('focus', apply);
+    };
   }, []);
 
   const update = useCallback((fn: Updater) => {
@@ -54,7 +65,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const resetDemo = useCallback(() => {
     stopSync();
     storage.clear();
-    setState(hydrate());
+    setState(tickReminders(createDemoState()));
   }, []);
 
   const value = useMemo<Store>(() => {

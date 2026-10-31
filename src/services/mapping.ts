@@ -1,5 +1,8 @@
 /** Map Claude frontend models onto the seven Supabase tables. Screens never import this file. */
 import type { Appointment, AppState, HealthReading, Medicine, ProfileId, ReminderEvent, Settings } from '../types'
+import { localIsoFromDateTime, localTimeZone, normalizeClock, normalizeFrequency, scheduleRowId } from './scheduleUtils'
+
+const tz = () => localTimeZone()
 
 export const memberId = (uid: string, profileId: ProfileId) => `${profileId}_${uid}`
 
@@ -9,9 +12,9 @@ const FOOD: Record<Medicine['food'], 'before' | 'with' | 'after' | 'none'> = {
 const FOOD_BACK: Record<string, Medicine['food']> = { before: 'Before food', with: 'With food', after: 'After food', none: 'No instruction' }
 
 const FREQ: Record<Medicine['frequency'], 'once' | 'twice' | 'thrice' | 'custom'> = {
-  'Once daily': 'once', 'Twice daily': 'twice', Thrice: 'thrice', Custom: 'custom',
+  'Once daily': 'once', 'Twice daily': 'twice', 'Three times daily': 'thrice', Custom: 'custom',
 }
-const FREQ_BACK: Record<string, Medicine['frequency']> = { once: 'Once daily', twice: 'Twice daily', thrice: 'Thrice', custom: 'Custom' }
+const FREQ_BACK: Record<string, Medicine['frequency']> = { once: 'Once daily', twice: 'Twice daily', thrice: 'Three times daily', custom: 'Custom' }
 
 const MED_STATUS: Record<Medicine['status'], string> = { ready: 'active', needs_review: 'draft', paused: 'paused', unconfigured: 'draft' }
 const MED_STATUS_BACK = (s: string): Medicine['status'] => (s === 'active' || s === 'confirmed' ? 'ready' : s === 'paused' ? 'paused' : 'needs_review')
@@ -46,7 +49,7 @@ export const profileRow = (s: AppState, uid: string) => ({
   call_name: s.profiles.find((p) => p.id === 'self')?.name || s.onboarding.name || '',
   phone: s.onboarding.phone ? `+91${s.onboarding.phone.replace(/\D/g, '')}` : null,
   language: LANG[s.settings.language] ?? 'hi',
-  time_zone: 'Asia/Kolkata',
+  time_zone: tz(),
   role: s.onboarding.purpose === 'parent' ? 'parent' : 'self',
   text_size: SIZE[s.settings.textSize] ?? 'large',
   speaking_speed: s.settings.speakingSpeed === 'Slower' ? 'slower' : 'normal',
@@ -69,7 +72,7 @@ export const familyMemberRow = (s: AppState, uid: string, profileId: ProfileId) 
     display_name: p.name,
     greeting_name: p.name,
     language: LANG[s.settings.language] ?? 'hi',
-    time_zone: 'Asia/Kolkata',
+    time_zone: tz(),
     speaking_speed: s.settings.speakingSpeed === 'Slower' ? 'slower' : 'normal',
     reminder_tone: s.settings.reminderTone === 'Standard' ? 'standard' : 'gentle',
     sathi_voice: profileId === 'mother' ? 'mom' : profileId === 'father' ? 'dad' : 'default',
@@ -91,7 +94,7 @@ export const medicineRow = (m: Medicine, uid: string) => ({
   purpose: m.forCondition ?? null,
   frequency: FREQ[m.frequency],
   times: m.times,
-  time_zone: 'Asia/Kolkata',
+  time_zone: tz(),
   food: FOOD[m.food],
   duration: m.duration === 'Fixed course' ? 'course' : 'ongoing',
   course_days: m.courseDays ?? null,
@@ -113,9 +116,9 @@ export const medicineFromRow = (r: Record<string, unknown>, fallback: ProfileId)
     name: String(r.name ?? ''),
     strength: String(r.strength ?? ''),
     dose: String(r.dose ?? '1 tablet'),
-    frequency: FREQ_BACK[String(r.frequency)] ?? 'Once daily',
+    frequency: normalizeFrequency(FREQ_BACK[String(r.frequency)] ?? String(r.frequency)),
     timeOfDay: extra.timeOfDay ?? 'Morning',
-    times: (r.times as string[]) ?? ['08:00'],
+    times: ((r.times as string[]) ?? ['08:00']).map((t) => normalizeClock(t) ?? t),
     food: FOOD_BACK[String(r.food)] ?? 'No instruction',
     duration: r.duration === 'course' ? 'Fixed course' : 'Ongoing',
     courseDays: r.course_days == null ? undefined : Number(r.course_days),
@@ -129,23 +132,30 @@ export const medicineFromRow = (r: Record<string, unknown>, fallback: ProfileId)
   }
 }
 
-export const scheduleRow = (m: Medicine, uid: string) => ({
-  id: `sch_${m.id}`,
-  owner_id: uid,
-  family_member_id: memberId(uid, m.profileId),
-  medicine_id: m.id,
-  kind: 'medicine',
-  title: m.name,
-  local_time: m.times[0] ?? '08:00',
-  frequency: FREQ[m.frequency],
-  time_zone: 'Asia/Kolkata',
-  active: m.status === 'ready',
-  start_at: new Date().toISOString(),
-})
+export const scheduleRow = (m: Medicine, uid: string, time?: string) => {
+  const t = normalizeClock(time ?? m.times[0] ?? '08:00') ?? '08:00'
+  return {
+    id: scheduleRowId(m.id, t),
+    owner_id: uid,
+    family_member_id: memberId(uid, m.profileId),
+    medicine_id: m.id,
+    kind: 'medicine' as const,
+    title: m.name,
+    local_time: t,
+    frequency: FREQ[normalizeFrequency(m.frequency)],
+    time_zone: tz(),
+    active: m.status === 'ready',
+    start_at: new Date().toISOString(),
+  }
+}
+
+export const scheduleRows = (m: Medicine, uid: string) =>
+  (m.times.length ? m.times : ['08:00']).map((t) => scheduleRow(m, uid, t))
 
 export const reminderRow = (e: ReminderEvent, uid: string) => {
-  const at = `${e.date}T${e.time}:00+05:30`
+  const at = localIsoFromDateTime(e.date, e.time)
   const kind = e.kind === 'custom' || e.kind === 'appointment' ? e.kind : 'medicine'
+  const clock = normalizeClock(e.time) ?? e.time
   return {
     id: e.id,
     owner_id: uid,
@@ -154,10 +164,10 @@ export const reminderRow = (e: ReminderEvent, uid: string) => {
     title: e.title || (kind === 'medicine' ? 'Medicine reminder' : 'Reminder'),
     notes: e.notes ?? null,
     medicine_id: kind === 'medicine' && e.medicineId ? e.medicineId : null,
-    schedule_id: kind === 'medicine' && e.medicineId ? `sch_${e.medicineId}` : null,
+    schedule_id: kind === 'medicine' && e.medicineId ? scheduleRowId(e.medicineId, clock) : null,
     scheduled_for: at,
     original_scheduled_for: at,
-    time_zone: 'Asia/Kolkata',
+    time_zone: tz(),
     recurrence: e.recurrence && e.recurrence !== 'none' ? { every: e.recurrence } : null,
     status: EVT[e.status],
     completed_at: e.status === 'taken' ? e.actedAt ?? null : null,
@@ -177,8 +187,8 @@ export const reminderFromRow = (r: Record<string, unknown>, fallback: ProfileId)
     title: String(r.title ?? ''),
     notes: (r.notes as string) || undefined,
     recurrence: (r.recurrence as { every?: 'daily' | 'weekly' } | null)?.every ?? 'none',
-    date: when.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
-    time: when.toLocaleTimeString('en-GB', { hour12: false, timeZone: 'Asia/Kolkata' }).slice(0, 5),
+    date: when.toLocaleDateString('en-CA'),
+    time: when.toLocaleTimeString('en-GB', { hour12: false }).slice(0, 5),
     status: EVT_BACK(String(r.status)),
     actedAt: r.completed_at ? String(r.completed_at) : undefined,
     selfReported: !!(r.completion as { via?: string } | null)?.via,
@@ -236,7 +246,7 @@ export const appointmentRow = (a: Appointment, uid: string) => ({
   doctor: a.doctor ?? null,
   clinic: a.clinic ?? null,
   at: a.at,
-  time_zone: 'Asia/Kolkata',
+  time_zone: tz(),
   notes: a.note ?? null,
   reminder: apptReminder(a),
   status: a.status === 'completed' ? 'completed' : a.status === 'cancelled' ? 'cancelled' : 'upcoming',

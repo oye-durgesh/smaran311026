@@ -4,6 +4,7 @@
  */
 import type { AppState, Profile, ProfileId } from '../types'
 import { blankLiveState } from '../data/demoData'
+import { tickReminders } from './reminderService'
 import { backendConfigured, currentSession, getClient } from './backend'
 import * as M from './mapping'
 
@@ -54,8 +55,15 @@ export async function pushNow(): Promise<void> {
     if (meds.length) {
       const { error } = await db.from('medicines').upsert(meds.map((m) => M.medicineRow(m, userId!)))
       if (error) throw error
-      const { error: se } = await db.from('medicine_schedules').upsert(meds.filter((m) => m.times.length).map((m) => M.scheduleRow(m, userId!)))
-      if (se) throw se
+      const schedules = meds.flatMap((m) => M.scheduleRows(m, userId!))
+      if (schedules.length) {
+        const { error: se } = await db.from('medicine_schedules').upsert(schedules)
+        if (se) throw se
+      }
+      const { data: existing } = await db.from('medicine_schedules').select('id,medicine_id').eq('owner_id', userId)
+      const keep = new Set(schedules.map((r) => r.id))
+      const stale = (existing ?? []).filter((r) => r.medicine_id && meds.some((m) => m.id === r.medicine_id) && !keep.has(String(r.id)))
+      for (const row of stale) await db.from('medicine_schedules').delete().eq('id', row.id).eq('owner_id', userId)
     }
     const evs = real(s.events)
     if (evs.length) {
@@ -111,13 +119,13 @@ async function pullNow(): Promise<void> {
     let s = cur
     if (prof) s = M.applyProfileRow(s, prof)
     s = applyMembers(s, members)
-    return {
+    return tickReminders({
       ...s,
       medicines: meds.map((r) => M.medicineFromRow(r, 'self')),
       events: events.map((r) => M.reminderFromRow(r, 'self')),
       readings: readings.map((r) => M.readingFromRow(r, 'self')),
       appointments: appts.map((r) => M.appointmentFromRow(r, 'self')),
-    }
+    })
   })
 }
 

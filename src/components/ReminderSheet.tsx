@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../data/store';
 import type { ReminderEvent } from '../types';
 import { C, DemoTag, MedIcon, PillBtn, TextLink } from './ui';
-import { fmtTime, markSkipped, markTaken, snooze } from '../services/reminderService';
+import { doseFace, fmtTime, markSkipped, markTaken, snooze, undoDose } from '../services/reminderService';
 import { medicineLabel } from '../services/medicineService';
 
 /** Bottom sheet for acting on a single reminder event. Taken is self-reported, never "verified". */
@@ -11,9 +11,11 @@ export default function ReminderSheet({ event, onClose, onEdit, onDelete }: { ev
   const { state, update } = useStore();
   const m = state.medicines.find((x) => x.id === event.medicineId);
   const custom = event.kind === 'custom' || event.kind === 'appointment' || !m;
+  const face = doseFace(event.status, event.date, event.time, new Date(), event.snoozedUntil);
   const done = event.status === 'taken' || event.status === 'skipped';
   const act = (fn: (s: typeof state, id: string) => typeof state) => () => { update((s) => fn(s, event.id)); onClose(); };
   const title = custom ? (event.title || 'Reminder') : medicineLabel(m!);
+  const statusLabel = face === 'due' ? 'due now' : face === 'overdue' ? 'overdue' : event.status === 'taken' && custom ? 'completed' : event.status;
   return (
     <div role="dialog" aria-modal="true" aria-label="Reminder actions" style={{ position: 'absolute', inset: 0, background: 'rgba(46,36,27,.35)', zIndex: 30 }} onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: C.paper, borderRadius: '24px 24px 0 0', padding: '12px 24px 32px', boxSizing: 'border-box' }}>
@@ -28,7 +30,7 @@ export default function ReminderSheet({ event, onClose, onEdit, onDelete }: { ev
           </div>
         </div>
         <div style={{ fontSize: 13, color: C.muted, marginTop: 10 }}>
-          Status: <b style={{ color: C.ink, textTransform: 'capitalize' }}>{event.status === 'taken' && custom ? 'completed' : event.status}</b>
+          Status: <b style={{ color: C.ink, textTransform: 'capitalize' }}>{statusLabel}</b>
           {event.status === 'snoozed' && event.snoozedUntil && ` until ${new Date(event.snoozedUntil).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}`}
           {event.status === 'taken' && !custom && ' (self-reported)'}
         </div>
@@ -37,7 +39,7 @@ export default function ReminderSheet({ event, onClose, onEdit, onDelete }: { ev
           {!done && <PillBtn tone="light" onClick={act((s, id) => snooze(s, id, 10))}>Snooze for 10 minutes</PillBtn>}
           {!done && !custom && <PillBtn tone="light" onClick={act(markSkipped)}>Skip this dose</PillBtn>}
           {event.status === 'missed' && <PillBtn tone="sage" onClick={act(markTaken)}>{custom ? 'Mark completed' : 'Mark taken'}</PillBtn>}
-          {done && <PillBtn tone="light" onClick={act((s, id) => ({ ...s, events: s.events.map((e) => (e.id === id ? { ...e, status: 'upcoming' as const, actedAt: undefined } : e)) }))}>Undo</PillBtn>}
+          {(done || event.status === 'missed') && <PillBtn tone="light" onClick={act(undoDose)}>Undo</PillBtn>}
           {custom && onEdit && <PillBtn tone="light" onClick={() => onEdit(event)}>Edit reminder</PillBtn>}
           {custom && onDelete && <PillBtn tone="danger" onClick={() => onDelete(event)}>Delete reminder</PillBtn>}
           {!custom && <PillBtn tone="light" onClick={() => nav(`/call/incoming?e=${event.id}`)}>Talk to Smaran</PillBtn>}

@@ -65,7 +65,7 @@ export interface ProfileRow { id: string; relationship: string; active: boolean 
 
 export async function startProfileSession(env: Env, input: {
   personId: string
-  lookup: (personId: string) => Promise<ProfileRow | null>
+  lookup: (personId: string) => Promise<ProfileRow | null | undefined>
 }, f: typeof fetch = fetch): Promise<Fail | { ok: true; agent: AgentWho; signedUrl: string; personId: string }> {
   const row = await input.lookup(input.personId)
   if (!row) return { ok: false, status: 403, body: { error: 'This family profile is not saved to your account yet, or you do not have access to it.', code: 'profile_not_synced' } }
