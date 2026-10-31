@@ -1,0 +1,21 @@
+# Minimal Supabase CLI config for Smaran.
+
+project_id = "smaran"
+
+[functions.elevenlabs-session]
+verify_jwt = true
+
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173"]
+minimum_password_length = 8
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+double_confirm_changes = true
+secure_password_change = true
+
+[auth.sms]
+enable_signup = false

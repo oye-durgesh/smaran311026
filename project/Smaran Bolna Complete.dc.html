@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="design_doc_mode" content="canvas">
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" style="background:#39264B"><text x="50%" y="54%" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="32" font-weight="700" fill="#FAF8F4">S</text><path d="M30 78h60" stroke="#EEE7F2" stroke-width="2" opacity=".4"/><circle cx="60" cy="92" r="4" fill="#F2C9B5" opacity=".6"/></svg></template>
+<style>
+body{margin:0;background:#F0EDE8;font-family:'Inter',system-ui,sans-serif;color:#29252D}
+a{color:#718C72;text-decoration:none}a:hover{color:#5A7A5B}
+.hd{font-family:'Plus Jakarta Sans',system-ui,sans-serif;letter-spacing:-.02em}
+.ph{width:390px;height:844px;border-radius:44px;background:#FAF8F4;position:relative;overflow:hidden;box-shadow:0 0 0 10px #1A1410,0 0 0 12px #29252D,0 30px 60px rgba(41,37,45,.16)}
+.sb{position:absolute;top:0;left:0;right:0;height:47px;padding:0 30px 8px;display:flex;align-items:flex-end;justify-content:space-between;font-size:15px;font-weight:600;color:#29252D;z-index:5}
+.sb.lt{color:#FAF8F4}
+.scr{position:absolute;top:47px;left:0;right:0;bottom:0}
+.hi{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;background:#29252D;border-radius:3px;opacity:.85;z-index:5}
+.hi.lt{background:#FAF8F4;opacity:.6}
+.cl{display:flex;flex-direction:column;align-items:center;gap:6px}
+.cl>.n{font-family:'Plus Jakarta Sans';font-size:13px;color:#85808A}
+.cl>.t{font-size:13px;color:#29252D;font-weight:500}
+.g4{display:grid;grid-template-columns:repeat(4,390px);gap:56px 40px;justify-content:center;max-width:1800px;margin:0 auto}
+.g3{display:grid;grid-template-columns:repeat(3,390px);gap:56px 40px;justify-content:center;max-width:1400px;margin:0 auto}
+.g5{display:grid;grid-template-columns:repeat(5,390px);gap:56px 40px;justify-content:center;max-width:2200px;margin:0 auto}
+.sec{max-width:2200px;margin:56px auto 24px;padding:0 4px}
+.sec h2{font-family:'Plus Jakarta Sans';font-size:26px;color:#29252D;letter-spacing:-.02em;margin:0;font-weight:700}
+.sec p{font-size:13px;color:#85808A;margin:4px 0 0}
+.crd{background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:16px}
+.bk{width:44px;height:44px;border-radius:50%;background:#FAF8F4;border:1px solid #EAE5E9;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bn{position:absolute;bottom:0;left:0;right:0;height:72px;background:#FAF8F4;border-top:1px solid #EAE5E9;display:flex;justify-content:space-around;align-items:center;padding:0 12px 8px;z-index:4}
+.bn-i{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:#85808A}
+.bn-i.on{color:#39264B;font-weight:600}
+.btn-p{height:52px;background:#39264B;color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;width:100%}
+.btn-s{height:52px;background:#EEE7F2;color:#39264B;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;width:100%}
+.btn-o{height:52px;background:#fff;border:1px solid #EAE5E9;color:#29252D;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;width:100%}
+.inp{height:52px;background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:0 16px;font-size:15px;color:#29252D;display:flex;align-items:center;width:100%;box-sizing:border-box}
+.inp .lbl{position:absolute;top:8px;left:16px;font-size:11px;color:#85808A;font-weight:500}
+.chip{padding:6px 14px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid #EAE5E9;color:#85808A;background:#fff}
+.chip.on{background:#EEE7F2;border-color:#39264B;color:#39264B}
+.chip.sage{background:rgba(113,140,114,.1);border-color:#718C72;color:#718C72}
+.chip.amber{background:rgba(215,154,70,.1);border-color:#D79A46;color:#D79A46}
+.chip.red{background:rgba(198,91,88,.1);border-color:#C65B58;color:#C65B58}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse-ring{0%{transform:scale(.8);opacity:.5}100%{transform:scale(1.8);opacity:0}}
+@keyframes pulse-ring2{0%{transform:scale(.8);opacity:.4}100%{transform:scale(2.1);opacity:0}}
+@keyframes pulse-ring3{0%{transform:scale(.8);opacity:.3}100%{transform:scale(2.4);opacity:0}}
+@keyframes orb-glow{0%,100%{box-shadow:0 0 40px rgba(57,38,75,.3)}50%{box-shadow:0 0 60px rgba(57,38,75,.5)}}
+@keyframes wave{0%,100%{height:12px}50%{height:28px}}
+@keyframes float-up{0%{transform:translateY(8px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes check-pop{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes listen-pulse{0%,100%{transform:scale(1);box-shadow:0 0 30px rgba(113,140,114,.25)}50%{transform:scale(1.05);box-shadow:0 0 50px rgba(113,140,114,.45)}}
+</style>
+</helmet>
+
+<div style="padding:64px 64px 120px;min-height:100vh">
+<div style="max-width:2200px;margin:0 auto 48px">
+<div class="hd" style="font-size:44px;color:#29252D;font-weight:700">Smaran</div>
+<div style="font-size:15px;color:#85808A;margin-top:6px;max-width:620px">Your voice. Their care. — Complete mobile application design system covering onboarding, home, family, medicines, reminders, voice experience, health tracking, appointments and settings.</div>
+<div style="display:flex;gap:16px;margin-top:20px;font-size:12px;color:#85808A;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:#39264B;border-radius:3px"></span>plum</div>
+<div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:#EEE7F2;border-radius:3px;border:1px solid #EAE5E9"></span>light plum</div>
+<div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:#FAF8F4;border-radius:3px;border:1px solid #EAE5E9"></span>background</div>
+<div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:#718C72;border-radius:3px"></span>sage</div>
+<div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:#F2C9B5;border-radius:3px"></span>peach</div>
+<div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:#D79A46;border-radius:3px"></span>amber</div>
+<div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:#C65B58;border-radius:3px"></span>danger</div>
+</div>
+</div>
+
+<!-- ═══ SECTION 1: ONBOARDING ═══ -->
+<div class="sec"><h2>1. Onboarding</h2><p>Welcome, account creation, purpose selection and family setup</p></div>
+<div class="g4">
+
+<!-- WELCOME -->
+<div class="cl"><div class="ph" data-screen-label="01 Welcome">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="display:flex;flex-direction:column;align-items:center;padding:40px 28px 40px;box-sizing:border-box;height:calc(100% - 47px)">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+<!-- Logo -->
+<div style="width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,#39264B,#5A3D6E);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(57,38,75,.2)">
+<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg>
+</div>
+<div class="hd" style="font-size:28px;font-weight:700;margin-top:20px">Smaran</div>
+<div style="font-size:14px;color:#85808A;margin-top:4px">Your voice. Their care.</div>
+<!-- Illustration area -->
+<div style="margin-top:32px;width:260px;height:200px;border-radius:24px;background:linear-gradient(135deg,#EEE7F2,#F2C9B5);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+<div style="position:absolute;right:-20px;bottom:-20px;width:100px;height:100px;border-radius:50%;background:rgba(57,38,75,.06)"></div>
+<div style="display:flex;gap:12px;align-items:flex-end">
+<div style="width:48px;height:56px;border-radius:14px;background:rgba(57,38,75,.12);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+<div style="width:48px;height:68px;border-radius:14px;background:rgba(113,140,114,.15);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#718C72" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+<div style="width:48px;height:60px;border-radius:14px;background:rgba(242,201,181,.3);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D79A46" stroke-width="1.5"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/></svg></div>
+</div>
+</div>
+<div style="margin-top:28px;font-size:15px;color:#85808A;text-align:center;line-height:1.6;max-width:300px">Stay connected to your family's health, medicines and daily care.</div>
+</div>
+<div style="width:100%;display:flex;flex-direction:column;gap:12px">
+<div class="btn-p">Get Started</div>
+<div style="text-align:center;font-size:14px;color:#85808A">I already have an account · <span style="color:#39264B;font-weight:500">Log in</span></div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">01</div><div class="t">Welcome</div></div>
+
+<!-- CREATE ACCOUNT -->
+<div class="cl"><div class="ph" data-screen-label="02 Create account">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px">
+<div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div>
+</div>
+<div class="hd" style="font-size:26px;font-weight:700;margin-top:24px">Create account</div>
+<div style="font-size:14px;color:#85808A;margin-top:6px">Set up your Smaran Bolna account</div>
+<div style="display:flex;flex-direction:column;gap:14px;margin-top:28px">
+<div style="position:relative">
+<div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:6px">Full name</div>
+<div class="inp" style="color:#29252D">Arjun Sharma</div>
+</div>
+<div style="position:relative">
+<div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:6px">Email address</div>
+<div class="inp" style="color:#29252D">arjun@email.com</div>
+</div>
+<div style="position:relative">
+<div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:6px">Password</div>
+<div class="inp" style="color:#29252D;display:flex;align-items:center;justify-content:space-between">••••••••<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+</div>
+</div>
+<div style="margin-top:10px;font-size:12px;color:#85808A;line-height:1.5">By continuing, you agree to our Terms of Service and Privacy Policy.</div>
+<div style="margin-top:24px"><div class="btn-p">Continue</div></div>
+<div style="text-align:center;font-size:14px;color:#85808A;margin-top:16px">Already have an account? <span style="color:#39264B;font-weight:500">Log in</span></div>
+</div>
+<div class="hi"></div>
+</div><div class="n">02</div><div class="t">Create account</div></div>
+
+<!-- CHOOSE PURPOSE -->
+<div class="cl"><div class="ph" data-screen-label="03 Purpose">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px">
+<div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div>
+</div>
+<!-- Progress -->
+<div style="display:flex;gap:6px;margin-top:16px"><div style="flex:1;height:3px;background:#39264B;border-radius:2px"></div><div style="flex:1;height:3px;background:#39264B;border-radius:2px"></div><div style="flex:1;height:3px;background:#EAE5E9;border-radius:2px"></div></div>
+<div class="hd" style="font-size:26px;font-weight:700;margin-top:24px">What brings you here?</div>
+<div style="font-size:14px;color:#85808A;margin-top:6px">This helps us personalise your experience</div>
+<div style="display:flex;flex-direction:column;gap:14px;margin-top:28px">
+<!-- Selected card -->
+<div style="background:#EEE7F2;border:2px solid #39264B;border-radius:20px;padding:20px;display:flex;gap:14px;align-items:flex-start">
+<div style="width:52px;height:52px;border-radius:16px;background:#39264B;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+<div style="flex:1"><div class="hd" style="font-size:17px;font-weight:600">Helping my family</div><div style="font-size:13px;color:#85808A;margin-top:4px;line-height:1.5">Manage medicines, reminders and health readings for your family members</div></div>
+<div style="width:24px;height:24px;border-radius:50%;background:#39264B;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg></div>
+</div>
+<!-- Unselected card -->
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:20px;display:flex;gap:14px;align-items:flex-start">
+<div style="width:52px;height:52px;border-radius:16px;background:#F2C9B5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+<div style="flex:1"><div class="hd" style="font-size:17px;font-weight:600">Managing my own health</div><div style="font-size:13px;color:#85808A;margin-top:4px;line-height:1.5">Track your own medicines, health readings and appointments</div></div>
+<div style="width:24px;height:24px;border-radius:50%;border:1.5px solid #EAE5E9;flex-shrink:0;margin-top:2px"></div>
+</div>
+</div>
+<div style="flex:1"></div>
+<div style="margin-top:32px"><div class="btn-p">Continue</div></div>
+</div>
+<div class="hi"></div>
+</div><div class="n">03</div><div class="t">Choose purpose</div></div>
+
+<!-- ADD FAMILY -->
+<div class="cl"><div class="ph" data-screen-label="04 Family setup">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px">
+<div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div>
+</div>
+<div style="display:flex;gap:6px;margin-top:16px"><div style="flex:1;height:3px;background:#39264B;border-radius:2px"></div><div style="flex:1;height:3px;background:#39264B;border-radius:2px"></div><div style="flex:1;height:3px;background:#39264B;border-radius:2px"></div></div>
+<div class="hd" style="font-size:26px;font-weight:700;margin-top:24px">Add family members</div>
+<div style="font-size:14px;color:#85808A;margin-top:6px">Select who you'll be caring for</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
+<!-- Mummy selected -->
+<div style="background:#EEE7F2;border:2px solid #39264B;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#F2C9B5,#E8A88E);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="hd" style="font-size:18px;font-weight:600;color:#39264B">M</span></div>
+<div style="flex:1"><div class="hd" style="font-size:16px;font-weight:600">Mummy</div><div style="font-size:12px;color:#85808A">Mother</div></div>
+<div style="width:22px;height:22px;border-radius:50%;background:#39264B;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></div>
+</div>
+<!-- Papa selected -->
+<div style="background:#EEE7F2;border:2px solid #39264B;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#EEE7F2,#C8B8D8);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="hd" style="font-size:18px;font-weight:600;color:#39264B">P</span></div>
+<div style="flex:1"><div class="hd" style="font-size:16px;font-weight:600">Papa</div><div style="font-size:12px;color:#85808A">Father</div></div>
+<div style="width:22px;height:22px;border-radius:50%;background:#39264B;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></div>
+</div>
+<!-- Dadi selected -->
+<div style="background:#EEE7F2;border:2px solid #39264B;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#D79A46,#C08A3A);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="hd" style="font-size:18px;font-weight:600;color:#fff">D</span></div>
+<div style="flex:1"><div class="hd" style="font-size:16px;font-weight:600">Dadi</div><div style="font-size:12px;color:#85808A">Grandmother</div></div>
+<div style="width:22px;height:22px;border-radius:50%;background:#39264B;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></div>
+</div>
+<!-- Me unselected -->
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#718C72,#5A7A5B);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="hd" style="font-size:18px;font-weight:600;color:#fff">A</span></div>
+<div style="flex:1"><div class="hd" style="font-size:16px;font-weight:600">Me</div><div style="font-size:12px;color:#85808A">Self</div></div>
+<div style="width:22px;height:22px;border-radius:50%;border:1.5px solid #EAE5E9"></div>
+</div>
+<!-- Add another -->
+<div style="border:1.5px dashed #EAE5E9;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;border-radius:50%;background:#FAF8F4;border:1px solid #EAE5E9;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg></div>
+<div style="flex:1"><div class="hd" style="font-size:16px;font-weight:600;color:#85808A">Add another member</div></div>
+</div>
+</div>
+<div style="margin-top:24px"><div class="btn-p">Continue</div></div>
+</div>
+<div class="hi"></div>
+</div><div class="n">04</div><div class="t">Add family</div></div>
+
+</div>
+
+<!-- ═══ SECTION 2: HOME DASHBOARD ═══ -->
+<div class="sec"><h2>2. Home Dashboard</h2><p>Main screen after onboarding — family overview, today's stats, upcoming reminders and quick actions</p></div>
+<div class="g3">
+
+<!-- HOME MAIN -->
+<div class="cl"><div class="ph" data-screen-label="05 Home">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<!-- Header -->
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div><div class="hd" style="font-size:22px;font-weight:700">Good morning, Arjun</div><div style="font-size:13px;color:#85808A;margin-top:2px">Thursday, 30 October</div></div>
+<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#39264B,#5A3D6E);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.2.65.77 1.09 1.46 1.1H21a2 2 0 010 4h-.09c-.69.01-1.26.45-1.46 1.1z"/></svg></div>
+</div>
+<!-- Family members horizontal -->
+<div style="margin-top:18px;display:flex;gap:12px;overflow-x:auto;padding-bottom:4px">
+<div style="min-width:140px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:14px;flex-shrink:0">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#F2C9B5,#E8A88E);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:14px;font-weight:600;color:#39264B">M</span></div><div><div class="hd" style="font-size:14px;font-weight:600">Mummy</div><div style="font-size:11px;color:#85808A">Mother</div></div></div>
+<div style="margin-top:10px;height:4px;background:#EAE5E9;border-radius:2px;overflow:hidden"><div style="height:100%;width:66%;background:#718C72;border-radius:2px"></div></div>
+<div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:11px;color:#718C72">2/3 taken</span><span style="font-size:11px;color:#85808A">8 PM</span></div>
+</div>
+<div style="min-width:140px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:14px;flex-shrink:0">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#EEE7F2,#C8B8D8);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:14px;font-weight:600;color:#39264B">P</span></div><div><div class="hd" style="font-size:14px;font-weight:600">Papa</div><div style="font-size:11px;color:#85808A">Father</div></div></div>
+<div style="margin-top:10px;height:4px;background:#EAE5E9;border-radius:2px;overflow:hidden"><div style="height:100%;width:75%;background:#718C72;border-radius:2px"></div></div>
+<div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:11px;color:#718C72">3/4 taken</span><span style="font-size:11px;color:#85808A">10 PM</span></div>
+</div>
+<div style="min-width:140px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:14px;flex-shrink:0">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#D79A46,#C08A3A);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:14px;font-weight:600;color:#fff">D</span></div><div><div class="hd" style="font-size:14px;font-weight:600">Dadi</div><div style="font-size:11px;color:#85808A">Grandmother</div></div></div>
+<div style="margin-top:10px;height:4px;background:#EAE5E9;border-radius:2px;overflow:hidden"><div style="height:100%;width:50%;background:#D79A46;border-radius:2px"></div></div>
+<div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:11px;color:#D79A46">1/2 taken</span><span style="font-size:11px;color:#85808A">9 PM</span></div>
+</div>
+</div>
+<!-- Today's overview -->
+<div style="display:flex;gap:10px;margin-top:16px">
+<div style="flex:1;background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:700;color:#718C72">6</div><div style="font-size:11px;color:#85808A;margin-top:2px">Completed</div></div>
+<div style="flex:1;background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:700;color:#39264B">3</div><div style="font-size:11px;color:#85808A;margin-top:2px">Upcoming</div></div>
+<div style="flex:1;background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:700;color:#D79A46">1</div><div style="font-size:11px;color:#85808A;margin-top:2px">Pending</div></div>
+</div>
+<!-- Upcoming reminders -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px"><div class="hd" style="font-size:16px;font-weight:600">Upcoming reminders</div><div style="font-size:13px;color:#39264B;font-weight:500">See all</div></div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+<div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#F2C9B5,#E8A88E);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:14px;font-weight:600;color:#39264B">M</span></div>
+<div style="flex:1"><div style="font-size:14px;font-weight:500">Amlodipine 5mg</div><div style="font-size:12px;color:#85808A;margin-top:1px">Mummy · 8:00 PM</div></div>
+<div style="display:flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg><span style="font-size:11px;color:#39264B;font-weight:500">Voice</span></div>
+</div>
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+<div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#EEE7F2,#C8B8D8);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:14px;font-weight:600;color:#39264B">P</span></div>
+<div style="flex:1"><div style="font-size:14px;font-weight:500">Atorvastatin 10mg</div><div style="font-size:12px;color:#85808A;margin-top:1px">Papa · 10:00 PM</div></div>
+<div style="display:flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg><span style="font-size:11px;color:#39264B;font-weight:500">Voice</span></div>
+</div>
+</div>
+<!-- Quick actions -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px"><div class="hd" style="font-size:16px;font-weight:600">Quick actions</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="width:40px;height:40px;border-radius:12px;background:#EEE7F2;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg></div><div style="font-size:13px;font-weight:500">Add medicine</div></div>
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="width:40px;height:40px;border-radius:12px;background:rgba(113,140,114,.1);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#718C72" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div style="font-size:13px;font-weight:500">Set reminder</div></div>
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="width:40px;height:40px;border-radius:12px;background:rgba(242,201,181,.3);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D79A46" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div><div style="font-size:13px;font-weight:500">Health reading</div></div>
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="width:40px;height:40px;border-radius:12px;background:rgba(57,38,75,.06);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg></div><div style="font-size:13px;font-weight:500">Appointment</div></div>
+</div>
+</div>
+<div class="bn">
+<div class="bn-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9v8a1 1 0 01-1 1h-4v-5h-4v5H5a1 1 0 01-1-1z"/></svg>Home</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-30 12 12)"/></svg>Medicines</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Health</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">05</div><div class="t">Home dashboard</div></div>
+
+<!-- HOME EMPTY STATE -->
+<div class="cl"><div class="ph" data-screen-label="06 Home empty">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div><div class="hd" style="font-size:22px;font-weight:700">Good morning, Arjun</div><div style="font-size:13px;color:#85808A;margin-top:2px">Thursday, 30 October</div></div>
+<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#39264B,#5A3D6E);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.2.65.77 1.09 1.46 1.1H21a2 2 0 010 4h-.09c-.69.01-1.26.45-1.46 1.1z"/></svg></div>
+</div>
+<!-- Empty state -->
+<div style="margin-top:48px;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 20px">
+<div style="width:80px;height:80px;border-radius:24px;background:#EEE7F2;display:flex;align-items:center;justify-content:center"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-30 12 12)"/></svg></div>
+<div class="hd" style="font-size:20px;font-weight:700;margin-top:20px">No medicines added yet</div>
+<div style="font-size:14px;color:#85808A;margin-top:8px;line-height:1.5">Start by adding medicines for your family members and scheduling reminders.</div>
+<div style="margin-top:24px;width:100%"><div class="btn-p">Add first medicine</div></div>
+<div style="margin-top:12px;width:100%"><div class="btn-s">Set up a reminder</div></div>
+</div>
+</div>
+<div class="bn">
+<div class="bn-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9v8a1 1 0 01-1 1h-4v-5h-4v5H5a1 1 0 01-1-1z"/></svg>Home</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-30 12 12)"/></svg>Medicines</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Health</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">06</div><div class="t">Home · Empty</div></div>
+
+<!-- HOME NOTIFICATION -->
+<div class="cl"><div class="ph" data-screen-label="07 Home alert">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div><div class="hd" style="font-size:22px;font-weight:700">Good evening, Arjun</div><div style="font-size:13px;color:#85808A;margin-top:2px">Thursday, 30 October</div></div>
+<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#39264B,#5A3D6E);display:flex;align-items:center;justify-content:center;position:relative"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.2.65.77 1.09 1.46 1.1H21a2 2 0 010 4h-.09c-.69.01-1.26.45-1.46 1.1z"/></svg><div style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#C65B58;border:2px solid #FAF8F4"></div></div>
+</div>
+<!-- Missed alert -->
+<div style="margin-top:14px;background:rgba(198,91,88,.06);border:1.5px solid rgba(198,91,88,.2);border-radius:16px;padding:14px 16px">
+<div style="display:flex;align-items:center;gap:10px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C65B58" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+<div style="flex:1"><div style="font-size:15px;font-weight:500;color:#C65B58">Dadi missed Metformin 2:00 PM</div><div style="font-size:12px;color:#85808A;margin-top:2px">Voice reminder was not answered</div></div>
+</div>
+<div style="display:flex;gap:8px;margin-top:12px">
+<div style="flex:1;height:40px;background:#fff;border:1px solid #C65B58;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#C65B58">Mark taken</div>
+<div style="height:40px;padding:0 16px;background:#fff;border:1px solid #EAE5E9;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#85808A">Retry</div>
+</div>
+</div>
+<!-- Low stock alert -->
+<div style="margin-top:10px;background:rgba(215,154,70,.06);border:1px solid rgba(215,154,70,.2);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:10px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D79A46" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+<div style="flex:1"><div style="font-size:14px;font-weight:500;color:#D79A46">Mummy's Amlodipine running low</div><div style="font-size:12px;color:#85808A">3 tablets remaining</div></div>
+</div>
+<!-- Family cards -->
+<div style="margin-top:16px;display:flex;gap:12px;overflow-x:auto;padding-bottom:4px">
+<div style="min-width:140px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:14px;flex-shrink:0">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#F2C9B5,#E8A88E);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:14px;font-weight:600;color:#39264B">M</span></div><div><div class="hd" style="font-size:14px;font-weight:600">Mummy</div></div></div>
+<div style="margin-top:10px;height:4px;background:#EAE5E9;border-radius:2px;overflow:hidden"><div style="height:100%;width:66%;background:#718C72;border-radius:2px"></div></div>
+<div style="font-size:11px;color:#718C72;margin-top:4px">2/3 taken</div>
+</div>
+<div style="min-width:140px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:14px;flex-shrink:0">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#D79A46,#C08A3A);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:14px;font-weight:600;color:#fff">D</span></div><div><div class="hd" style="font-size:14px;font-weight:600">Dadi</div></div></div>
+<div style="margin-top:10px;height:4px;background:#EAE5E9;border-radius:2px;overflow:hidden"><div style="height:100%;width:50%;background:#C65B58;border-radius:2px"></div></div>
+<div style="font-size:11px;color:#C65B58;margin-top:4px">1/2 · 1 missed</div>
+</div>
+</div>
+<!-- Upcoming -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><div class="hd" style="font-size:16px;font-weight:600">Upcoming</div></div>
+<div style="margin-top:10px;background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+<div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#EEE7F2,#C8B8D8);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:14px;font-weight:600;color:#39264B">P</span></div>
+<div style="flex:1"><div style="font-size:14px;font-weight:500">Atorvastatin 10mg</div><div style="font-size:12px;color:#85808A;margin-top:1px">Papa · 10:00 PM</div></div>
+<div style="display:flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg><span style="font-size:11px;color:#39264B;font-weight:500">Voice</span></div>
+</div>
+</div>
+<div class="bn">
+<div class="bn-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9v8a1 1 0 01-1 1h-4v-5h-4v5H5a1 1 0 01-1-1z"/></svg>Home</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-30 12 12)"/></svg>Medicines</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Health</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">07</div><div class="t">Home · Alerts</div></div>
+
+</div>
+
+<!-- ═══ SECTION 3: FAMILY MANAGEMENT ═══ -->
+<div class="sec"><h2>3. Family Management</h2><p>Family profile, member details and add/edit member</p></div>
+<div class="g3">
+
+<!-- FAMILY PROFILE -->
+<div class="cl"><div class="ph" data-screen-label="08 Family profile">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Family member</div></div>
+<!-- Profile header -->
+<div style="margin-top:20px;display:flex;align-items:center;gap:16px">
+<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#F2C9B5,#E8A88E);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="hd" style="font-size:26px;font-weight:700;color:#39264B">M</span></div>
+<div style="flex:1"><div class="hd" style="font-size:22px;font-weight:700">Mummy</div><div style="font-size:14px;color:#85808A;margin-top:2px">Mother</div></div>
+<div style="padding:6px 14px;border:1px solid #EAE5E9;border-radius:10px;font-size:13px;color:#39264B;font-weight:500">Edit</div>
+</div>
+<!-- Summary cards -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px">
+<div class="crd" style="text-align:center;padding:14px"><div style="font-size:22px;font-weight:700;color:#39264B">3</div><div style="font-size:12px;color:#85808A;margin-top:2px">Active medicines</div></div>
+<div class="crd" style="text-align:center;padding:14px"><div style="font-size:22px;font-weight:700;color:#718C72">2/3</div><div style="font-size:12px;color:#85808A;margin-top:2px">Taken today</div></div>
+<div class="crd" style="text-align:center;padding:14px"><div style="font-size:22px;font-weight:700;color:#D79A46">1</div><div style="font-size:12px;color:#85808A;margin-top:2px">Upcoming</div></div>
+<div class="crd" style="text-align:center;padding:14px"><div style="font-size:22px;font-weight:700">130/85</div><div style="font-size:12px;color:#85808A;margin-top:2px">Latest BP</div></div>
+</div>
+<!-- Today's schedule -->
+<div class="hd" style="font-size:16px;font-weight:600;margin-top:20px">Today's schedule</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:inset 3px 0 0 #718C72"><div style="flex:1"><div style="font-size:14px;font-weight:500">Metformin 500mg</div><div style="font-size:12px;color:#718C72">Taken · 8:04 AM</div></div></div>
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:inset 3px 0 0 #718C72"><div style="flex:1"><div style="font-size:14px;font-weight:500">Ecosprin 75mg</div><div style="font-size:12px;color:#718C72">Taken · 8:10 AM</div></div></div>
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:inset 3px 0 0 #D79A46"><div style="flex:1"><div style="font-size:14px;font-weight:500">Amlodipine 5mg</div><div style="font-size:12px;color:#D79A46">8:00 PM · Upcoming</div></div></div>
+</div>
+<!-- Stock alert -->
+<div style="margin-top:14px;background:rgba(215,154,70,.06);border:1px solid rgba(215,154,70,.2);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D79A46" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+<div style="flex:1;font-size:13px;color:#D79A46;font-weight:500">Amlodipine: 3 tablets remaining</div>
+</div>
+<!-- Appointment -->
+<div class="hd" style="font-size:16px;font-weight:600;margin-top:20px">Next appointment</div>
+<div style="margin-top:10px;background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px">
+<div style="width:40px;height:40px;border-radius:12px;background:#EEE7F2;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg></div>
+<div style="flex:1"><div style="font-size:14px;font-weight:500">Dr. Gupta · Cardiology</div><div style="font-size:12px;color:#85808A">Sat, 1 Nov · 10:00 AM</div></div>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+</div>
+<div class="bn">
+<div class="bn-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9v8a1 1 0 01-1 1h-4v-5h-4v5H5a1 1 0 01-1-1z"/></svg>Home</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-30 12 12)"/></svg>Medicines</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Health</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">08</div><div class="t">Family profile</div></div>
+
+<!-- ADD FAMILY MEMBER -->
+<div class="cl"><div class="ph" data-screen-label="09 Add member">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Add family member</div></div>
+<!-- Photo -->
+<div style="margin-top:24px;display:flex;flex-direction:column;align-items:center">
+<div style="width:80px;height:80px;border-radius:50%;background:#EEE7F2;border:2px dashed #EAE5E9;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+<div style="font-size:13px;color:#39264B;font-weight:500;margin-top:8px">Add photo (optional)</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;margin-top:24px">
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:6px">Name</div><div class="inp">Dada</div></div>
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:6px">Relationship</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<div class="chip">Mother</div>
+<div class="chip">Father</div>
+<div class="chip on">Grandfather</div>
+<div class="chip">Grandmother</div>
+<div class="chip">Self</div>
+<div class="chip">Other</div>
+</div></div>
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:6px">Notes (optional)</div><div style="height:80px;background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:14px 16px;font-size:14px;color:#85808A">Diabetic, prefers Hindi reminders</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
+<div class="btn-p">Save member</div>
+<div class="btn-o">Cancel</div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">09</div><div class="t">Add member</div></div>
+
+<!-- EDIT FAMILY MEMBER -->
+<div class="cl"><div class="ph" data-screen-label="10 Edit member">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Edit member</div></div>
+<div style="margin-top:24px;display:flex;flex-direction:column;align-items:center">
+<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#F2C9B5,#E8A88E);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:32px;font-weight:700;color:#39264B">M</span></div>
+<div style="font-size:13px;color:#39264B;font-weight:500;margin-top:8px">Change photo</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;margin-top:24px">
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:6px">Name</div><div class="inp">Mummy</div></div>
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:6px">Relationship</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<div class="chip on">Mother</div>
+<div class="chip">Father</div>
+<div class="chip">Grandfather</div>
+<div class="chip">Grandmother</div>
+<div class="chip">Self</div>
+<div class="chip">Other</div>
+</div></div>
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:6px">Notes</div><div style="height:80px;background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:14px 16px;font-size:14px;color:#29252D">BP patient, takes medicine after breakfast</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
+<div class="btn-p">Save changes</div>
+<div class="btn-o">Cancel</div>
+<div style="text-align:center;font-size:14px;color:#C65B58;font-weight:500;margin-top:8px">Remove member</div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">10</div><div class="t">Edit member</div></div>
+
+</div>
+
+<!-- ═══ SECTION 4: MEDICINE MANAGEMENT ═══ -->
+<div class="sec"><h2>4. Medicine Management</h2><p>Medicine dashboard, details, add/edit forms and stock management</p></div>
+<div class="g5">
+
+<!-- MEDICINES DASHBOARD -->
+<div class="cl"><div class="ph" data-screen-label="11 Medicines">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;justify-content:space-between;align-items:center"><div class="hd" style="font-size:24px;font-weight:700">Medicines</div><div style="width:40px;height:40px;border-radius:12px;background:#39264B;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg></div></div>
+<!-- Family filter -->
+<div style="display:flex;gap:8px;margin-top:14px;overflow-x:auto">
+<div class="chip on">All</div>
+<div class="chip">Mummy</div>
+<div class="chip">Papa</div>
+<div class="chip">Dadi</div>
+</div>
+<!-- Search -->
+<div style="margin-top:12px;height:44px;background:#fff;border:1px solid #EAE5E9;border-radius:12px;display:flex;align-items:center;padding:0 14px;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><span style="font-size:14px;color:#85808A">Search medicines…</span></div>
+<!-- Tabs -->
+<div style="display:flex;gap:0;margin-top:14px;background:#fff;border:1px solid #EAE5E9;border-radius:12px;overflow:hidden">
+<div style="flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;background:#39264B;color:#fff">Active</div>
+<div style="flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;color:#85808A">Low stock</div>
+<div style="flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;color:#85808A">Completed</div>
+</div>
+<!-- Medicine cards -->
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+<div class="crd" style="display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#EEE7F2,#C8B8D8);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/></svg></div>
+<div style="flex:1"><div style="font-size:15px;font-weight:500">Metformin 500mg</div><div style="font-size:12px;color:#85808A">Mummy · Twice daily</div><div style="display:flex;gap:6px;margin-top:4px"><span style="font-size:11px;color:#718C72">Next: 2 PM</span><span style="font-size:11px;color:#85808A">· 18 left</span></div></div>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+<div class="crd" style="display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#F2C9B5,#E8A88E);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/></svg></div>
+<div style="flex:1"><div style="font-size:15px;font-weight:500">Amlodipine 5mg</div><div style="font-size:12px;color:#85808A">Mummy · Once daily</div><div style="display:flex;gap:6px;margin-top:4px"><span style="font-size:11px;color:#718C72">Next: 8 PM</span><span style="font-size:11px;color:#D79A46">· 3 left ⚠</span></div></div>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+<div class="crd" style="display:flex;align-items:center;gap:12px">
+<div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#718C72,#5A7A5B);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/></svg></div>
+<div style="flex:1"><div style="font-size:15px;font-weight:500">Atorvastatin 10mg</div><div style="font-size:12px;color:#85808A">Papa · Once daily</div><div style="display:flex;gap:6px;margin-top:4px"><span style="font-size:11px;color:#718C72">Next: 10 PM</span><span style="font-size:11px;color:#85808A">· 12 left</span></div></div>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+</div>
+</div>
+<div class="bn">
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9v8a1 1 0 01-1 1h-4v-5h-4v5H5a1 1 0 01-1-1z"/></svg>Home</div>
+<div class="bn-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-30 12 12)"/></svg>Medicines</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Health</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">11</div><div class="t">Medicines</div></div>
+
+<!-- MEDICINE DETAIL -->
+<div class="cl"><div class="ph" data-screen-label="12 Medicine detail">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Medicine details</div></div>
+<div style="margin-top:20px;display:flex;align-items:center;gap:14px">
+<div style="width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,#EEE7F2,#C8B8D8);display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/></svg></div>
+<div><div class="hd" style="font-size:20px;font-weight:700">Metformin 500mg</div><div style="font-size:13px;color:#85808A;margin-top:2px">For Mummy</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:0;margin-top:20px;background:#fff;border:1px solid #EAE5E9;border-radius:16px;overflow:hidden">
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Dosage</span><span style="font-size:14px;font-weight:500">1 tablet</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Frequency</span><span style="font-size:14px;font-weight:500">Twice daily</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Food</span><span style="font-size:14px;font-weight:500">After food</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Schedule</span><span style="font-size:14px;font-weight:500">8 AM, 2 PM</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Started</span><span style="font-size:14px;font-weight:500">15 Oct 2026</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Ends</span><span style="font-size:14px;font-weight:500">14 Nov 2026</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Stock</span><span style="font-size:14px;font-weight:500">18 tablets</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px"><span style="font-size:14px;color:#85808A">Next reminder</span><span style="font-size:14px;font-weight:500;color:#718C72">Today 2 PM</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+<div class="btn-p">Schedule reminder</div>
+<div class="btn-s">Edit medicine</div>
+<div style="text-align:center;font-size:14px;color:#C65B58;font-weight:500;margin-top:4px">Discontinue</div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">12</div><div class="t">Medicine detail</div></div>
+
+<!-- ADD MEDICINE -->
+<div class="cl"><div class="ph" data-screen-label="13 Add medicine">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Add medicine</div></div>
+<!-- Family member -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">FAMILY MEMBER</div>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+<div class="chip on">Mummy</div>
+<div class="chip">Papa</div>
+<div class="chip">Dadi</div>
+</div>
+<!-- Basic info -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">BASIC INFORMATION</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Medicine name</div><div class="inp" style="color:#85808A">Enter medicine name</div></div>
+<div style="display:flex;gap:10px"><div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Strength</div><div class="inp" style="color:#85808A">e.g. 500mg</div></div><div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Dosage</div><div class="inp" style="color:#85808A">1 tablet</div></div></div>
+</div>
+<!-- Schedule -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">SCHEDULE</div>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+<div class="chip">Once daily</div>
+<div class="chip on">Twice daily</div>
+<div class="chip">Three times</div>
+<div class="chip">Custom</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+<div class="chip on">Morning</div>
+<div class="chip on">Afternoon</div>
+<div class="chip">Evening</div>
+<div class="chip">Night</div>
+</div>
+<!-- Food -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">FOOD INSTRUCTIONS</div>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+<div class="chip">Before food</div>
+<div class="chip on">After food</div>
+<div class="chip">With food</div>
+<div class="chip">Not specified</div>
+</div>
+<!-- Duration -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">DURATION &amp; STOCK</div>
+<div style="display:flex;gap:10px;margin-top:8px">
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Start date</div><div class="inp" style="font-size:13px">30 Oct 2026</div></div>
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">End date</div><div class="inp" style="font-size:13px">29 Nov 2026</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-top:10px">
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Quantity</div><div class="inp">30</div></div>
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Low alert at</div><div class="inp">5</div></div>
+</div>
+<div style="margin-top:24px"><div class="btn-p">Save medicine</div></div>
+</div>
+<div class="hi"></div>
+</div><div class="n">13</div><div class="t">Add medicine</div></div>
+
+<!-- EDIT MEDICINE -->
+<div class="cl"><div class="ph" data-screen-label="14 Edit medicine">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Edit medicine</div></div>
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">FAMILY MEMBER</div>
+<div style="display:flex;gap:8px;margin-top:8px"><div class="chip on">Mummy</div></div>
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">BASIC INFORMATION</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Medicine name</div><div class="inp">Metformin</div></div>
+<div style="display:flex;gap:10px"><div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Strength</div><div class="inp">500mg</div></div><div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Dosage</div><div class="inp">1 tablet</div></div></div>
+</div>
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">SCHEDULE</div>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+<div class="chip">Once daily</div>
+<div class="chip on">Twice daily</div>
+<div class="chip">Three times</div>
+<div class="chip">Custom</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+<div class="chip on">Morning</div>
+<div class="chip on">Afternoon</div>
+<div class="chip">Evening</div>
+<div class="chip">Night</div>
+</div>
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">FOOD INSTRUCTIONS</div>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+<div class="chip">Before food</div>
+<div class="chip on">After food</div>
+<div class="chip">With food</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
+<div class="btn-p">Save changes</div>
+<div class="btn-o">Cancel</div>
+<div style="text-align:center;font-size:14px;color:#C65B58;font-weight:500;margin-top:4px">Discontinue medicine</div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">14</div><div class="t">Edit medicine</div></div>
+
+<!-- STOCK MANAGEMENT -->
+<div class="cl"><div class="ph" data-screen-label="15 Stock">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Stock</div></div>
+<div style="margin-top:20px;display:flex;align-items:center;gap:14px">
+<div style="width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,#F2C9B5,#E8A88E);display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/></svg></div>
+<div><div class="hd" style="font-size:18px;font-weight:700">Amlodipine 5mg</div><div style="font-size:13px;color:#85808A">Mummy</div></div>
+</div>
+<!-- Stock card -->
+<div style="margin-top:20px;background:rgba(215,154,70,.06);border:1.5px solid rgba(215,154,70,.25);border-radius:20px;padding:20px;text-align:center">
+<div style="font-size:48px;font-weight:700;color:#D79A46">3</div>
+<div style="font-size:14px;color:#85808A;margin-top:4px">tablets remaining</div>
+<div style="height:8px;background:#EAE5E9;border-radius:4px;margin-top:16px;overflow:hidden"><div style="height:100%;width:10%;background:#D79A46;border-radius:4px"></div></div>
+<div style="font-size:13px;color:#D79A46;font-weight:500;margin-top:8px">Low stock — approximately 3 days left</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:0;margin-top:16px;background:#fff;border:1px solid #EAE5E9;border-radius:16px;overflow:hidden">
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Daily usage</span><span style="font-size:14px;font-weight:500">1 tablet</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Last refill</span><span style="font-size:14px;font-weight:500">15 Oct 2026</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px"><span style="font-size:14px;color:#85808A">Low alert threshold</span><span style="font-size:14px;font-weight:500">5 tablets</span></div>
+</div>
+<div style="margin-top:20px"><div class="btn-p">Update stock</div></div>
+</div>
+<div class="hi"></div>
+</div><div class="n">15</div><div class="t">Stock management</div></div>
+
+</div>
+
+<!-- ═══ SECTION 5: VOICE REMINDER SCHEDULING ═══ -->
+<div class="sec"><h2>5. Voice Reminder Scheduling</h2><p>Create reminder, confirmation and reminder details</p></div>
+<div class="g3">
+
+<!-- CREATE REMINDER -->
+<div class="cl"><div class="ph" data-screen-label="16 Create reminder">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Create reminder</div></div>
+<!-- Who -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">WHO IS THIS FOR?</div>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+<div class="chip on">Mummy</div>
+<div class="chip">Papa</div>
+<div class="chip">Dadi</div>
+<div class="chip">Me</div>
+</div>
+<!-- What -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">WHAT?</div>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+<div class="chip on">Medicine</div>
+<div class="chip">Appointment</div>
+<div class="chip">Custom</div>
+</div>
+<div style="margin-top:10px"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Select medicine</div><div class="inp" style="justify-content:space-between">Amlodipine 5mg<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg></div></div>
+<!-- When -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">WHEN?</div>
+<div style="display:flex;gap:10px;margin-top:8px">
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Date</div><div class="inp" style="font-size:13px">30 Oct 2026</div></div>
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Time</div><div class="inp" style="font-size:13px">8:00 PM</div></div>
+</div>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+<div class="chip on">Repeat daily</div>
+<div class="chip">Weekdays only</div>
+<div class="chip">Custom</div>
+</div>
+<!-- How -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:20px">REMINDER METHOD</div>
+<div style="margin-top:8px;background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px 16px">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;align-items:center;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg><div><div style="font-size:14px;font-weight:500">Voice reminder</div><div style="font-size:12px;color:#85808A">In-app voice call with Sathi</div></div></div>
+<div style="width:44px;height:24px;background:#39264B;border-radius:12px;position:relative"><div style="width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;right:2px;top:2px"></div></div>
+</div>
+</div>
+<div style="margin-top:8px;background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px 16px">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;align-items:center;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div><div style="font-size:14px;font-weight:500">Enable conversation</div><div style="font-size:12px;color:#85808A">Sathi confirms medicine taken</div></div></div>
+<div style="width:44px;height:24px;background:#39264B;border-radius:12px;position:relative"><div style="width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;right:2px;top:2px"></div></div>
+</div>
+</div>
+<div style="margin-top:20px"><div class="btn-p">Schedule reminder</div></div>
+</div>
+<div class="hi"></div>
+</div><div class="n">16</div><div class="t">Create reminder</div></div>
+
+<!-- REMINDER CONFIRMATION -->
+<div class="cl"><div class="ph" data-screen-label="17 Reminder confirmed">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;box-sizing:border-box;height:calc(100% - 47px)">
+<div style="width:72px;height:72px;border-radius:50%;background:#EEE7F2;display:flex;align-items:center;justify-content:center;animation:check-pop .5s ease-out"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg></div>
+<div class="hd" style="font-size:22px;font-weight:700;margin-top:20px">Reminder scheduled</div>
+<div style="font-size:14px;color:#85808A;margin-top:6px;text-align:center">Your voice reminder is set and ready.</div>
+<!-- Confirmation card -->
+<div style="margin-top:24px;width:100%;background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:16px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:#85808A">Family member</span><span style="font-size:14px;font-weight:500">Mummy</span></div>
+<div style="height:1px;background:#EAE5E9"></div>
+<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:#85808A">Medicine</span><span style="font-size:14px;font-weight:500">Amlodipine 5mg</span></div>
+<div style="height:1px;background:#EAE5E9"></div>
+<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:#85808A">Date</span><span style="font-size:14px;font-weight:500">30 Oct 2026</span></div>
+<div style="height:1px;background:#EAE5E9"></div>
+<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:#85808A">Time</span><span style="font-size:14px;font-weight:500">8:00 PM</span></div>
+<div style="height:1px;background:#EAE5E9"></div>
+<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:#85808A">Repeat</span><span style="font-size:14px;font-weight:500">Daily</span></div>
+<div style="height:1px;background:#EAE5E9"></div>
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#85808A">Voice reminder</span><div style="display:flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#718C72" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg><span style="font-size:14px;font-weight:500;color:#718C72">Enabled</span></div></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;width:100%;margin-top:24px">
+<div class="btn-p">Done</div>
+<div class="btn-o">Edit reminder</div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">17</div><div class="t">Reminder confirmed</div></div>
+
+<!-- REMINDER DETAILS -->
+<div class="cl"><div class="ph" data-screen-label="18 Reminder detail">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Reminder</div></div>
+<div style="margin-top:20px;display:flex;align-items:center;gap:14px">
+<div style="width:56px;height:56px;border-radius:18px;background:#EEE7F2;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+<div><div class="hd" style="font-size:18px;font-weight:700">Amlodipine 5mg</div><div style="font-size:13px;color:#85808A">Mummy · Medicine reminder</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:6px;margin-top:14px"><div style="width:8px;height:8px;border-radius:50%;background:#718C72"></div><span style="font-size:13px;color:#718C72;font-weight:500">Active</span></div>
+<div style="display:flex;flex-direction:column;gap:0;margin-top:16px;background:#fff;border:1px solid #EAE5E9;border-radius:16px;overflow:hidden">
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Time</span><span style="font-size:14px;font-weight:500">8:00 PM</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Repeat</span><span style="font-size:14px;font-weight:500">Daily</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Voice</span><span style="font-size:14px;font-weight:500;color:#718C72">Enabled</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px"><span style="font-size:14px;color:#85808A">Last triggered</span><span style="font-size:14px;font-weight:500">Yesterday, 8 PM</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+<div class="btn-p">Edit reminder</div>
+<div class="btn-s">Pause reminder</div>
+<div style="text-align:center;font-size:14px;color:#C65B58;font-weight:500;margin-top:4px">Cancel reminder</div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">18</div><div class="t">Reminder detail</div></div>
+
+</div>
+
+<!-- ═══ SECTION 6: IN-APP VOICE REMINDER ═══ -->
+<div class="sec"><h2>6. In-App Voice Reminder</h2><p>Incoming reminder call, connecting, active conversation and call outcome — immersive voice-first experience</p></div>
+<div class="g4">
+
+<!-- INCOMING CALL -->
+<div class="cl"><div class="ph" data-screen-label="19 Incoming call">
+<div class="sb lt"><span>9:41</span><span></span></div>
+<div class="scr">
+<div style="position:absolute;inset:0;background:radial-gradient(ellipse 120% 70% at 50% 30%,#5A3D6E 0%,#39264B 50%,#1E1528 90%)"></div>
+<div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px 28px;box-sizing:border-box">
+<div style="font-size:12px;color:rgba(250,248,244,.5);letter-spacing:.1em;font-weight:500;margin-bottom:28px">INCOMING VOICE REMINDER</div>
+<!-- Orb -->
+<div style="width:130px;height:130px;border-radius:50%;background:linear-gradient(135deg,#F2C9B5,#D79A46);display:flex;align-items:center;justify-content:center;position:relative;animation:orb-glow 3s ease-in-out infinite">
+<div style="position:absolute;inset:-16px;border-radius:50%;border:2px solid rgba(242,201,181,.2);animation:pulse-ring 2s ease-out infinite"></div>
+<div style="position:absolute;inset:-32px;border-radius:50%;border:1.5px solid rgba(242,201,181,.1);animation:pulse-ring2 2s .4s ease-out infinite"></div>
+<div style="position:absolute;inset:-48px;border-radius:50%;border:1px solid rgba(242,201,181,.05);animation:pulse-ring3 2s .8s ease-out infinite"></div>
+<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg>
+</div>
+<div class="hd" style="font-size:28px;font-weight:700;color:#fff;margin-top:24px">Sathi</div>
+<div style="font-size:14px;color:rgba(250,248,244,.6);margin-top:8px">Voice reminder for Mummy</div>
+<div style="margin-top:6px;padding:6px 16px;background:rgba(255,255,255,.08);border-radius:999px;font-size:14px;color:rgba(250,248,244,.8);font-weight:500">Amlodipine 5mg · 8:00 PM</div>
+<div style="display:flex;gap:48px;margin-top:48px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+<div style="width:64px;height:64px;border-radius:50%;background:#C65B58;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" transform="rotate(135)"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></div>
+<div style="font-size:13px;color:rgba(250,248,244,.7)">Decline</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+<div style="width:64px;height:64px;border-radius:50%;background:#718C72;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></div>
+<div style="font-size:13px;color:rgba(250,248,244,.7)">Answer</div>
+</div>
+</div>
+</div>
+</div>
+<div class="hi lt"></div>
+</div><div class="n">19</div><div class="t">Incoming call</div></div>
+
+<!-- CONNECTING -->
+<div class="cl"><div class="ph" data-screen-label="20 Connecting">
+<div class="sb lt"><span>9:41</span><span></span></div>
+<div class="scr">
+<div style="position:absolute;inset:0;background:radial-gradient(ellipse 120% 70% at 50% 30%,#5A3D6E 0%,#39264B 50%,#1E1528 90%)"></div>
+<div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px 28px;box-sizing:border-box">
+<div style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#F2C9B5,#D79A46);display:flex;align-items:center;justify-content:center;position:relative">
+<div style="position:absolute;inset:-14px;border-radius:50%;border:1px solid rgba(242,201,181,.1)"></div>
+<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg>
+</div>
+<div class="hd" style="font-size:26px;font-weight:700;color:#fff;margin-top:24px">Sathi</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+<div style="width:28px;height:28px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite"></div>
+</div>
+<div style="font-size:16px;color:rgba(250,248,244,.8);margin-top:12px">Connecting…</div>
+<div style="font-size:13px;color:rgba(250,248,244,.5);margin-top:6px">Mummy · Amlodipine 5mg</div>
+</div>
+</div>
+<div class="hi lt"></div>
+</div><div class="n">20</div><div class="t">Connecting</div></div>
+
+<!-- ACTIVE CONVERSATION -->
+<div class="cl"><div class="ph" data-screen-label="21 Active call">
+<div class="sb lt"><span>9:41</span><span></span></div>
+<div class="scr">
+<div style="position:absolute;inset:0;background:radial-gradient(ellipse 120% 70% at 50% 30%,#5A3D6E 0%,#39264B 50%,#1E1528 90%)"></div>
+<div style="position:relative;display:flex;flex-direction:column;align-items:center;height:100%;padding:24px 28px;box-sizing:border-box">
+<!-- Timer -->
+<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+<div style="width:6px;height:6px;border-radius:50%;background:#718C72"></div>
+<span style="font-size:14px;color:rgba(250,248,244,.5);letter-spacing:.08em">0:34</span>
+</div>
+<!-- Orb -->
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+<div style="width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#F2C9B5,#D79A46);display:flex;align-items:center;justify-content:center;position:relative;animation:orb-glow 3s ease-in-out infinite">
+<div style="position:absolute;inset:-16px;border-radius:50%;border:1.5px solid rgba(242,201,181,.2);animation:pulse-ring 2s ease-out infinite"></div>
+<div style="position:absolute;inset:-32px;border-radius:50%;border:1px solid rgba(242,201,181,.1);animation:pulse-ring2 2s .3s ease-out infinite"></div>
+<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg>
+</div>
+<div class="hd" style="font-size:24px;font-weight:700;color:#fff;margin-top:20px">Sathi</div>
+<div style="font-size:14px;color:rgba(250,248,244,.7);margin-top:6px">Speaking…</div>
+<!-- Waveform -->
+<div style="display:flex;gap:4px;align-items:center;margin-top:16px;height:28px">
+<span style="width:3px;height:14px;background:rgba(255,255,255,.5);border-radius:2px;animation:wave .7s ease-in-out infinite"></span>
+<span style="width:3px;height:22px;background:rgba(255,255,255,.6);border-radius:2px;animation:wave .7s .08s ease-in-out infinite"></span>
+<span style="width:3px;height:16px;background:rgba(255,255,255,.5);border-radius:2px;animation:wave .7s .16s ease-in-out infinite"></span>
+<span style="width:3px;height:26px;background:rgba(255,255,255,.7);border-radius:2px;animation:wave .7s .24s ease-in-out infinite"></span>
+<span style="width:3px;height:18px;background:rgba(255,255,255,.5);border-radius:2px;animation:wave .7s .32s ease-in-out infinite"></span>
+<span style="width:3px;height:12px;background:rgba(255,255,255,.4);border-radius:2px;animation:wave .7s .4s ease-in-out infinite"></span>
+</div>
+</div>
+<!-- Controls -->
+<div style="display:flex;gap:32px;padding-bottom:28px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+<div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg></div>
+<div style="font-size:11px;color:rgba(250,248,244,.6)">Mute</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+<div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19 12a7 7 0 01-7 7"/></svg></div>
+<div style="font-size:11px;color:rgba(250,248,244,.6)">Speaker</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+<div style="width:56px;height:56px;border-radius:50%;background:#C65B58;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" transform="rotate(135)"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></div>
+<div style="font-size:11px;color:rgba(250,248,244,.6)">End</div>
+</div>
+</div>
+</div>
+</div>
+<div class="hi lt"></div>
+</div><div class="n">21</div><div class="t">Active call</div></div>
+
+<!-- CALL OUTCOME -->
+<div class="cl"><div class="ph" data-screen-label="22 Call outcome">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Call complete</div></div>
+<!-- Outcome -->
+<div style="margin-top:24px;text-align:center">
+<div style="width:64px;height:64px;border-radius:50%;background:rgba(113,140,114,.1);display:flex;align-items:center;justify-content:center;margin:0 auto;animation:check-pop .5s ease-out"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#718C72" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg></div>
+<div class="hd" style="font-size:20px;font-weight:700;margin-top:14px">Medicine taken</div>
+<div style="font-size:14px;color:#85808A;margin-top:4px">Mummy confirmed taking Amlodipine 5mg</div>
+</div>
+<!-- Outcome cards -->
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px 16px">
+<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:#85808A">Outcome</span><span class="chip sage" style="font-size:12px;padding:3px 10px">Taken ✓</span></div>
+</div>
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px 16px">
+<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:#85808A">Duration</span><span style="font-size:14px;font-weight:500">0:42</span></div>
+</div>
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px 16px">
+<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:#85808A">Next reminder</span><span style="font-size:14px;font-weight:500">Tomorrow, 8 PM</span></div>
+</div>
+</div>
+<!-- Other possible outcomes -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:24px">OTHER OUTCOME STATES</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+<div class="chip sage">Taken ✓</div>
+<div class="chip red">Not taken</div>
+<div class="chip amber">Follow-up set</div>
+<div class="chip">Unconfirmed</div>
+<div class="chip red">Missed</div>
+</div>
+<div style="margin-top:24px"><div class="btn-p">Done</div></div>
+</div>
+<div class="hi"></div>
+</div><div class="n">22</div><div class="t">Call outcome</div></div>
+
+</div>
+
+<!-- ═══ SECTION 7: HEALTH TRACKING ═══ -->
+<div class="sec"><h2>7. Health Tracking</h2><p>Health dashboard, add reading (voice + manual), confirm, history, health card and reading details</p></div>
+<div class="g3">
+
+<!-- HEALTH DASHBOARD -->
+<div class="cl"><div class="ph" data-screen-label="23 Health">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;justify-content:space-between;align-items:center"><div class="hd" style="font-size:24px;font-weight:700">Health</div></div>
+<div style="display:flex;gap:8px;margin-top:14px;overflow-x:auto">
+<div class="chip on">All</div>
+<div class="chip">Mummy</div>
+<div class="chip">Papa</div>
+<div class="chip">Dadi</div>
+</div>
+<!-- BP card -->
+<div style="margin-top:16px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:18px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start">
+<div><div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:50%;background:#39264B"></div><div style="font-size:13px;color:#85808A">Blood Pressure</div></div>
+<div style="font-size:32px;font-weight:700;margin-top:6px;letter-spacing:-.02em">130<span style="font-size:20px;color:#85808A">/</span>85</div>
+<div style="font-size:12px;color:#85808A;margin-top:2px">mmHg · Mummy · Today, 9 AM</div></div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+<div style="padding:4px 10px;background:rgba(113,140,114,.1);border-radius:999px;font-size:11px;color:#718C72;font-weight:500">Normal</div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+</div>
+</div>
+<!-- Sugar card -->
+<div style="margin-top:10px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:18px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start">
+<div><div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:50%;background:#D79A46"></div><div style="font-size:13px;color:#85808A">Blood Sugar</div></div>
+<div style="font-size:32px;font-weight:700;margin-top:6px;letter-spacing:-.02em">180<span style="font-size:14px;font-weight:400;color:#85808A;margin-left:4px">mg/dL</span></div>
+<div style="font-size:12px;color:#85808A;margin-top:2px">Fasting · Papa · Today, 7:30 AM</div></div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+<div style="padding:4px 10px;background:rgba(215,154,70,.1);border-radius:999px;font-size:11px;color:#D79A46;font-weight:500">Elevated</div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div style="display:flex;gap:10px;margin-top:14px">
+<div style="flex:1;height:48px;background:#39264B;color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>Add reading</div>
+<div style="flex:1;height:48px;background:#fff;border:1px solid #EAE5E9;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>History</div>
+</div>
+</div>
+<div class="bn">
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9v8a1 1 0 01-1 1h-4v-5h-4v5H5a1 1 0 01-1-1z"/></svg>Home</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-30 12 12)"/></svg>Medicines</div>
+<div class="bn-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Health</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">23</div><div class="t">Health</div></div>
+
+<!-- ADD READING -->
+<div class="cl"><div class="ph" data-screen-label="24 Add reading">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Add reading</div></div>
+<!-- Wispr Flow voice box -->
+<div style="margin-top:20px;background:#EEE7F2;border:1.5px solid #DDD4E6;border-radius:20px;padding:20px">
+<div style="font-size:12px;font-weight:600;color:#39264B;letter-spacing:.05em;margin-bottom:10px">USE WISPR FLOW FOR BETTER VOICE CAPTURE</div>
+<div style="background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:14px 16px;min-height:80px;font-size:14px;color:#29252D;line-height:1.6;font-family:'Inter',sans-serif">"Mera BP aaj 130 over 85 hai. Mera sugar aaj 125 mg per dL tha, breakfast ke baad."</div>
+</div>
+<div style="text-align:center;font-size:13px;color:#85808A;margin-top:12px">or enter manually</div>
+<!-- Manual input -->
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:16px">TYPE</div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<div class="chip on">Blood Pressure</div>
+<div class="chip">Blood Sugar</div>
+</div>
+<div style="display:flex;gap:10px;margin-top:14px">
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Systolic</div><div class="inp">130</div></div>
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Diastolic</div><div class="inp">85</div></div>
+</div>
+<div style="font-size:12px;font-weight:600;color:#85808A;letter-spacing:.05em;margin-top:16px">DATE &amp; TIME</div>
+<div style="display:flex;gap:10px;margin-top:8px">
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Date</div><div class="inp" style="font-size:13px">30 Oct 2026</div></div>
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Time</div><div class="inp" style="font-size:13px">9:00 AM</div></div>
+</div>
+<div style="margin-top:12px"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Notes (optional)</div><div style="height:56px;background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:14px 16px;font-size:14px;color:#85808A">Any additional notes…</div></div>
+<div style="margin-top:20px"><div class="btn-p">Continue</div></div>
+</div>
+<div class="hi"></div>
+</div><div class="n">24</div><div class="t">Add reading</div></div>
+
+<!-- CONFIRM READING -->
+<div class="cl"><div class="ph" data-screen-label="25 Confirm reading">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="display:flex;flex-direction:column;align-items:center;padding:16px 24px 40px;box-sizing:border-box;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px;width:100%"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Confirm reading</div></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%">
+<div style="width:100%;background:rgba(113,140,114,.08);border:1.5px solid rgba(113,140,114,.2);border-radius:20px;padding:24px;text-align:center">
+<div style="font-size:13px;color:#718C72;font-weight:500;letter-spacing:.05em">BLOOD PRESSURE</div>
+<div style="font-size:52px;font-weight:700;margin-top:8px;letter-spacing:-.03em">130<span style="font-size:28px;color:#85808A">/</span>85</div>
+<div style="font-size:14px;color:#85808A;margin-top:4px">mmHg</div>
+<div style="height:1px;background:rgba(113,140,114,.15);margin:16px 0"></div>
+<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:#85808A">For</span><span style="font-size:14px;font-weight:500">Mummy</span></div>
+<div style="display:flex;justify-content:space-between;margin-top:8px"><span style="font-size:13px;color:#85808A">Date</span><span style="font-size:14px;font-weight:500">30 Oct, 9:00 AM</span></div>
+<div style="display:flex;justify-content:space-between;margin-top:8px"><span style="font-size:13px;color:#85808A">Status</span><span style="padding:3px 10px;background:rgba(113,140,114,.1);border-radius:999px;font-size:12px;color:#718C72;font-weight:500">Normal</span></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;width:100%;margin-top:20px">
+<div class="btn-p">Confirm &amp; save</div>
+<div class="btn-o">Edit values</div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">25</div><div class="t">Confirm reading</div></div>
+
+</div>
+
+<!-- ═══ SECTION 8: APPOINTMENTS ═══ -->
+<div class="sec"><h2>8. Doctor Appointments</h2><p>Appointment list, add and detail screens</p></div>
+<div class="g3">
+
+<!-- APPOINTMENTS LIST -->
+<div class="cl"><div class="ph" data-screen-label="26 Appointments">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;justify-content:space-between;align-items:center"><div class="hd" style="font-size:24px;font-weight:700">Appointments</div><div style="width:40px;height:40px;border-radius:12px;background:#39264B;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg></div></div>
+<!-- Tabs -->
+<div style="display:flex;gap:0;margin-top:14px;background:#fff;border:1px solid #EAE5E9;border-radius:12px;overflow:hidden">
+<div style="flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;background:#39264B;color:#fff">Upcoming</div>
+<div style="flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;color:#85808A">Past</div>
+<div style="flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;color:#85808A">Cancelled</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+<div class="crd" style="display:flex;gap:12px">
+<div style="width:48px;height:48px;border-radius:14px;background:#EEE7F2;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg></div>
+<div style="flex:1"><div style="font-size:15px;font-weight:500">Dr. Gupta · Cardiology</div><div style="font-size:12px;color:#85808A;margin-top:2px">Mummy · City Hospital</div><div style="display:flex;gap:6px;margin-top:4px;align-items:center"><span style="font-size:12px;color:#39264B;font-weight:500">Sat, 1 Nov · 10 AM</span><div style="display:flex;align-items:center;gap:3px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg><span style="font-size:11px;color:#39264B">Voice</span></div></div></div>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5" style="margin-top:4px"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+<div class="crd" style="display:flex;gap:12px">
+<div style="width:48px;height:48px;border-radius:14px;background:rgba(242,201,181,.3);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D79A46" stroke-width="1.5"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg></div>
+<div style="flex:1"><div style="font-size:15px;font-weight:500">Dr. Patel · Endocrinology</div><div style="font-size:12px;color:#85808A;margin-top:2px">Papa · Apollo Clinic</div><div style="font-size:12px;color:#39264B;font-weight:500;margin-top:4px">Mon, 3 Nov · 11 AM</div></div>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5" style="margin-top:4px"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+</div>
+</div>
+<div class="bn">
+<div class="bn-i on"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9v8a1 1 0 01-1 1h-4v-5h-4v5H5a1 1 0 01-1-1z"/></svg>Home</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="9" width="16" height="6" rx="3" transform="rotate(-30 12 12)"/></svg>Medicines</div>
+<div class="bn-i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Health</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">26</div><div class="t">Appointments</div></div>
+
+<!-- ADD APPOINTMENT -->
+<div class="cl"><div class="ph" data-screen-label="27 Add appointment">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 24px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Add appointment</div></div>
+<div style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Family member</div><div style="display:flex;gap:8px"><div class="chip on">Mummy</div><div class="chip">Papa</div><div class="chip">Dadi</div></div></div>
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Doctor name</div><div class="inp">Dr. Gupta</div></div>
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Clinic or hospital</div><div class="inp">City Hospital</div></div>
+<div style="display:flex;gap:10px">
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Date</div><div class="inp" style="font-size:13px">1 Nov 2026</div></div>
+<div style="flex:1"><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Time</div><div class="inp" style="font-size:13px">10:00 AM</div></div>
+</div>
+<div><div style="font-size:12px;font-weight:500;color:#85808A;margin-bottom:4px">Notes (optional)</div><div style="height:56px;background:#fff;border:1px solid #EAE5E9;border-radius:14px;padding:14px 16px;font-size:14px;color:#29252D">Monthly BP check-up</div></div>
+</div>
+<!-- Voice toggle -->
+<div style="margin-top:14px;background:#fff;border:1px solid #EAE5E9;border-radius:16px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;align-items:center;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg><div style="font-size:14px;font-weight:500">Voice reminder</div></div>
+<div style="width:44px;height:24px;background:#39264B;border-radius:12px;position:relative"><div style="width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;right:2px;top:2px"></div></div>
+</div>
+<div style="margin-top:20px"><div class="btn-p">Save appointment</div></div>
+</div>
+<div class="hi"></div>
+</div><div class="n">27</div><div class="t">Add appointment</div></div>
+
+<!-- APPOINTMENT DETAIL -->
+<div class="cl"><div class="ph" data-screen-label="28 Appt detail">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Appointment</div></div>
+<div style="margin-top:20px;display:flex;align-items:center;gap:14px">
+<div style="width:56px;height:56px;border-radius:18px;background:#EEE7F2;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39264B" stroke-width="1.5"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg></div>
+<div><div class="hd" style="font-size:18px;font-weight:700">Dr. Gupta</div><div style="font-size:13px;color:#85808A">Cardiology · Mummy</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:0;margin-top:20px;background:#fff;border:1px solid #EAE5E9;border-radius:16px;overflow:hidden">
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Patient</span><span style="font-size:14px;font-weight:500">Mummy</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Doctor</span><span style="font-size:14px;font-weight:500">Dr. Gupta</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Clinic</span><span style="font-size:14px;font-weight:500">City Hospital</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Date &amp; time</span><span style="font-size:14px;font-weight:500">1 Nov, 10 AM</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EAE5E9"><span style="font-size:14px;color:#85808A">Notes</span><span style="font-size:14px;font-weight:500">Monthly BP check-up</span></div>
+<div style="display:flex;justify-content:space-between;padding:14px 16px"><span style="font-size:14px;color:#85808A">Reminder</span><span style="font-size:14px;font-weight:500;color:#718C72">Voice · Enabled</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+<div class="btn-p">Edit appointment</div>
+<div style="text-align:center;font-size:14px;color:#C65B58;font-weight:500;margin-top:4px">Cancel appointment</div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">28</div><div class="t">Appointment detail</div></div>
+
+</div>
+
+<!-- ═══ SECTION 9: SETTINGS & PRIVACY ═══ -->
+<div class="sec"><h2>9. Settings &amp; Privacy</h2><p>Settings menu, reminder preferences and privacy/account</p></div>
+<div class="g3">
+
+<!-- SETTINGS -->
+<div class="cl"><div class="ph" data-screen-label="29 Settings">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 80px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div class="hd" style="font-size:24px;font-weight:700">Settings</div>
+<!-- Profile card -->
+<div style="margin-top:18px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px">
+<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#39264B,#5A3D6E);display:flex;align-items:center;justify-content:center"><span class="hd" style="font-size:20px;font-weight:600;color:#fff">A</span></div>
+<div style="flex:1"><div class="hd" style="font-size:17px;font-weight:600">Arjun Sharma</div><div style="font-size:13px;color:#85808A">arjun@email.com</div></div>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+</div>
+<!-- Menu items -->
+<div style="margin-top:14px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;overflow:hidden">
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg><div style="flex:1;font-size:15px;font-weight:500">Family members</div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><div style="flex:1;font-size:15px;font-weight:500">Reminder preferences</div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M12 2a10 10 0 00-7 17l7 5 7-5a10 10 0 00-7-17z"/></svg><div style="flex:1;font-size:15px;font-weight:500">Language</div><div style="font-size:13px;color:#85808A">English</div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><div style="flex:1;font-size:15px;font-weight:500">Notifications</div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><div style="flex:1;font-size:15px;font-weight:500">Privacy</div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div style="flex:1;font-size:15px;font-weight:500">Account</div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+</div>
+<div style="margin-top:20px;text-align:center;font-size:12px;color:#85808A">Smaran v1.0</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">29</div><div class="t">Settings</div></div>
+
+<!-- REMINDER PREFERENCES -->
+<div class="cl"><div class="ph" data-screen-label="30 Preferences">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Reminder preferences</div></div>
+<div style="display:flex;flex-direction:column;gap:0;margin-top:20px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;overflow:hidden">
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EAE5E9"><div><div style="font-size:15px;font-weight:500">Voice reminders</div><div style="font-size:12px;color:#85808A;margin-top:2px">In-app voice call with Sathi</div></div><div style="width:44px;height:24px;background:#39264B;border-radius:12px;position:relative"><div style="width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;right:2px;top:2px"></div></div></div>
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EAE5E9"><div><div style="font-size:15px;font-weight:500">Follow-up reminders</div><div style="font-size:12px;color:#85808A;margin-top:2px">Retry if not confirmed</div></div><div style="width:44px;height:24px;background:#39264B;border-radius:12px;position:relative"><div style="width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;right:2px;top:2px"></div></div></div>
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EAE5E9"><div><div style="font-size:15px;font-weight:500">Follow-up interval</div><div style="font-size:12px;color:#85808A;margin-top:2px">Time before retrying</div></div><div style="font-size:14px;color:#39264B;font-weight:500">15 min</div></div>
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EAE5E9"><div><div style="font-size:15px;font-weight:500">Reminder sound</div><div style="font-size:12px;color:#85808A;margin-top:2px">Notification tone</div></div><div style="font-size:14px;color:#39264B;font-weight:500">Gentle</div></div>
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15px;font-weight:500">Language</div><div style="font-size:12px;color:#85808A;margin-top:2px">Voice reminder language</div></div><div style="font-size:14px;color:#39264B;font-weight:500">Hindi</div></div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">30</div><div class="t">Preferences</div></div>
+
+<!-- PRIVACY & ACCOUNT -->
+<div class="cl"><div class="ph" data-screen-label="31 Privacy">
+<div class="sb"><span>9:41</span><span></span></div>
+<div class="scr" style="padding:16px 20px 40px;box-sizing:border-box;overflow-y:auto;height:calc(100% - 47px)">
+<div style="display:flex;align-items:center;gap:12px"><div class="bk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29252D" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></div><div class="hd" style="font-size:20px;font-weight:700">Privacy &amp; Account</div></div>
+<!-- Info card -->
+<div style="margin-top:20px;background:rgba(113,140,114,.06);border:1px solid rgba(113,140,114,.15);border-radius:16px;padding:14px 16px;display:flex;gap:10px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#718C72" stroke-width="1.5" style="flex-shrink:0;margin-top:2px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+<div style="font-size:13px;color:#718C72;line-height:1.5">Conversation transcripts and audio recordings are not stored. Voice reminders are processed in real-time and not saved.</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:0;margin-top:16px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;overflow:hidden">
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><div style="flex:1"><div style="font-size:15px;font-weight:500">Account information</div><div style="font-size:12px;color:#85808A">Arjun Sharma · arjun@email.com</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><div style="flex:1"><div style="font-size:15px;font-weight:500">Voice consent</div><div style="font-size:12px;color:#85808A">Manage voice usage permissions</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><div style="flex:1"><div style="font-size:15px;font-weight:500">Health data privacy</div><div style="font-size:12px;color:#85808A">How health data is stored</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><div style="flex:1"><div style="font-size:15px;font-weight:500">Export health records</div><div style="font-size:12px;color:#85808A">Download as PDF or CSV</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#85808A" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></div>
+</div>
+<!-- Destructive actions -->
+<div style="margin-top:16px;background:#fff;border:1px solid #EAE5E9;border-radius:20px;overflow:hidden">
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><div style="flex:1"><div style="font-size:15px;font-weight:500;color:#C65B58">Delete voice data</div><div style="font-size:12px;color:#85808A">Remove all stored voice preferences</div></div></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EAE5E9"><div style="flex:1"><div style="font-size:15px;font-weight:500;color:#C65B58">Delete account</div><div style="font-size:12px;color:#85808A">Permanently remove your account</div></div></div>
+<div style="padding:16px;display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font-size:15px;font-weight:500">Log out</div></div></div>
+</div>
+</div>
+<div class="hi"></div>
+</div><div class="n">31</div><div class="t">Privacy &amp; account</div></div>
+
+</div>
+
+</div>
+
+</x-dc>
+</body>
+</html>

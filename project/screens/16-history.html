@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#1A1410; font-family:'Inter',system-ui,sans-serif; color:#2E241B; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .serif { font-family:'Source Serif 4',Georgia,serif; letter-spacing:-0.01em; }
+  .phone { width:390px; height:844px; border-radius:44px; background:#F5EFE6; position:relative; overflow:hidden; box-shadow:0 0 0 10px #1A1410,0 0 0 12px #2E241B,0 30px 60px rgba(46,36,27,0.18); }
+  .statusbar { position:absolute; top:0; left:0; right:0; height:47px; padding:0 30px; display:flex; align-items:flex-end; justify-content:space-between; padding-bottom:8px; font-size:15px; font-weight:600; z-index:5; }
+  .home-indicator { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; opacity:0.9; }
+  .screen-body { position:absolute; top:47px; left:0; right:0; bottom:0; }
+  @keyframes s-fade { from { opacity:0 } to { opacity:1 } }
+  @keyframes s-fadeup { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+  @keyframes s-scale { 0% { opacity:0; transform:scale(0.8) } 65% { transform:scale(1.06) } 100% { opacity:1; transform:scale(1) } }
+  @keyframes s-draw360 { from { stroke-dashoffset:var(--dash) } to { stroke-dashoffset:0 } }
+  @keyframes s-pulse { 0% { transform:scale(0.6); opacity:0.45 } 100% { transform:scale(2.1); opacity:0 } }
+  @keyframes s-settle { 0% { transform:scale(1) } 40% { transform:scale(1.025) } 100% { transform:scale(1) } }
+  .anim-fade { opacity:0; animation:s-fade 400ms ease-out forwards; }
+  .anim-fadeup { opacity:0; transform:translateY(8px); animation:s-fadeup 350ms ease-out forwards; }
+  .anim-scale { opacity:0; animation:s-scale 500ms cubic-bezier(0.34,1.4,0.55,1) forwards; }
+</style>
+</head>
+<body>
+<title>Samran — 16 History</title>
+<div class="phone" data-screen-label="16 History">
+        <div class="statusbar"><span>9:41</span><span style="width:17px; height:11px; border:1px solid #2E241B; border-radius:2px;"></span></div>
+        <div class="screen-body" style="padding:24px 24px 90px; box-sizing:border-box; height:calc(100% - 47px); display:flex; flex-direction:column;">
+          <div class="serif" style="font-size:22px; color:#2E241B;">Your History</div>
+          <div style="margin-top:20px; height:40px; background:#EFE7DA; border-radius:999px; padding:4px; display:flex; gap:4px;">
+            <div style="flex:1; background:#FFFFFF; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:14px; color:#2E241B; font-weight:500; box-shadow:0 1px 3px rgba(0,0,0,0.06);">Week</div>
+            <div style="flex:1; display:flex; align-items:center; justify-content:center; font-size:14px; color:#7A6B5D;">Month</div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:24px;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;"><div style="width:100%; aspect-ratio:1; background:#7A9B6B; border-radius:6px;"></div><div style="font-size:12px; color:#7A6B5D;">M</div></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;"><div style="width:100%; aspect-ratio:1; background:#7A9B6B; border-radius:6px;"></div><div style="font-size:12px; color:#7A6B5D;">T</div></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;"><div style="width:100%; aspect-ratio:1; background:#FFFFFF; border:1.5px solid #C08560; border-radius:6px;"></div><div style="font-size:12px; color:#7A6B5D;">W</div></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;"><div style="width:100%; aspect-ratio:1; background:#7A9B6B; border-radius:6px;"></div><div style="font-size:12px; color:#7A6B5D;">T</div></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;"><div style="width:100%; aspect-ratio:1; background:#7A9B6B; border-radius:6px;"></div><div style="font-size:12px; color:#7A6B5D;">F</div></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;"><div style="width:100%; aspect-ratio:1; background:#FFFFFF; border:1.5px solid #C08560; border-radius:6px;"></div><div style="font-size:12px; color:#7A6B5D;">S</div></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;"><div style="width:100%; aspect-ratio:1; background:#7A9B6B; border-radius:6px; box-shadow:0 0 0 2px #7B8B5A;"></div><div style="font-size:12px; color:#7B8B5A; font-weight:600;">S</div></div>
+          </div>
+          <div style="font-size:12px; color:#7A6B5D; letter-spacing:0.08em; text-transform:uppercase; margin-top:28px; font-weight:500;">Recent</div>
+          <div style="display:flex; flex-direction:column; margin-top:8px;">
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #E8DFD1;"><span style="width:10px; height:10px; border-radius:50%; background:#7A9B6B;"></span><div style="flex:1;"><div style="font-size:15px; color:#2E241B;">Metformin — 8:00 AM</div><div style="font-size:13px; color:#7A6B5D; margin-top:2px;">Taken at 8:04 AM</div></div></div>
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #E8DFD1;"><span style="width:10px; height:10px; border-radius:50%; background:#C08560;"></span><div style="flex:1;"><div style="font-size:15px; color:#2E241B;">Amlodipine — 2:00 PM</div><div style="font-size:13px; color:#7A6B5D; margin-top:2px;">Missed</div></div></div>
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #E8DFD1;"><span style="width:10px; height:10px; border-radius:50%; background:#7A9B6B;"></span><div style="flex:1;"><div style="font-size:15px; color:#2E241B;">Metformin — 8:00 AM</div><div style="font-size:13px; color:#7A6B5D; margin-top:2px;">Taken at 8:02 AM (yesterday)</div></div></div>
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #E8DFD1;"><span style="width:10px; height:10px; border-radius:50%; background:#7A9B6B;"></span><div style="flex:1;"><div style="font-size:15px; color:#2E241B;">Amlodipine — 2:00 PM</div><div style="font-size:13px; color:#7A6B5D; margin-top:2px;">Taken at 2:10 PM (yesterday)</div></div></div>
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0;"><span style="width:10px; height:10px; border-radius:50%; background:#7A9B6B;"></span><div style="flex:1;"><div style="font-size:15px; color:#2E241B;">Metformin — 8:00 AM</div><div style="font-size:13px; color:#7A6B5D; margin-top:2px;">Taken (Mon)</div></div></div>
+          </div>
+        </div>
+        <div style="position:absolute; bottom:24px; left:0; right:0; height:56px; display:flex; justify-content:space-around; align-items:center; padding:0 32px;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A89584" stroke-width="1.5"><path d="M3 12l9-9 9 9v9h-6v-6H9v6H3v-9z"/></svg><span style="font-size:10px; color:#A89584;">Home</span></div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="#7B8B5A" stroke="#7B8B5A" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3" stroke="#FFFFFF"/></svg><span style="font-size:10px; color:#7B8B5A; font-weight:500;">History</span></div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A89584" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg><span style="font-size:10px; color:#A89584;">Settings</span></div>
+        </div>
+        <div class="home-indicator"></div>
+      </div>
+</body>
+</html>

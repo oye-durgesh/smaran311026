@@ -1,0 +1,8 @@
+// Generated from project/Smaran Complete.dc.html (screen 40 Reading saved). Layout is the design source of truth.
+export default function S40ReadingSaved() {
+  return (
+    <>
+<div className="scr" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 24px",boxSizing:"border-box",height:"calc(100% - 47px)"}}><div style={{width:"80px",height:"80px",borderRadius:"50%",background:"#E7EDE2",display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#526D51" strokeWidth="2"><path d="M5 12l5 5L20 7"/></svg></div><div className="sf" style={{fontSize:"22px",marginTop:"20px",textAlign:"center"}}>Reading saved</div><div style={{marginTop:"16px",background:"#fff",border:"1px solid #E8DFD1",borderRadius:"14px",padding:"14px",width:"100%"}}><div style={{display:"flex",justifyContent:"space-between",padding:"6px 0"}}><span style={{fontSize:"14px",color:"#7A6B5D"}}>Blood sugar</span><span style={{fontSize:"16px",fontWeight:"600"}}>180 mg/dL</span></div><div style={{display:"flex",justifyContent:"space-between",padding:"6px 0"}}><span style={{fontSize:"14px",color:"#7A6B5D"}}>Context</span><span style={{fontSize:"14px",fontWeight:"500"}}>Fasting</span></div><div style={{display:"flex",justifyContent:"space-between",padding:"6px 0"}}><span style={{fontSize:"14px",color:"#7A6B5D"}}>Recorded</span><span style={{fontSize:"14px",fontWeight:"500"}}>Today, 7:30 AM</span></div></div><div style={{display:"flex",flexDirection:"column",gap:"12px",width:"100%",marginTop:"24px"}}><div className="bt bt-d">Done</div><div style={{fontSize:"14px",color:"#7B8B5A",textAlign:"center"}}>View health history</div></div></div>
+    </>
+  );
+}

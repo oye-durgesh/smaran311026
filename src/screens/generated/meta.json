@@ -1,0 +1,370 @@
+[
+ {
+  "id": "01",
+  "label": "01 Welcome",
+  "name": "S01Welcome",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "02",
+  "label": "02 Account",
+  "name": "S02Account",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "03",
+  "label": "03 Language",
+  "name": "S03Language",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "04",
+  "label": "04 Personalization",
+  "name": "S04Personalization",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "05",
+  "label": "05 Profile",
+  "name": "S05Profile",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "06",
+  "label": "06 Notifications",
+  "name": "S06Notifications",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "07",
+  "label": "07 Microphone",
+  "name": "S07Microphone",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "08",
+  "label": "08 Upload Rx",
+  "name": "S08UploadRx",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "09",
+  "label": "09 Processing",
+  "name": "S09Processing",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "10",
+  "label": "10 Review",
+  "name": "S10Review",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "11",
+  "label": "11 Schedule",
+  "name": "S11Schedule",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "12",
+  "label": "12 Finalize",
+  "name": "S12Finalize",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "13",
+  "label": "13 Home empty",
+  "name": "S13HomeEmpty",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "14",
+  "label": "14 Home active",
+  "name": "S14HomeActive",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "15",
+  "label": "15 Medicines",
+  "name": "S15Medicines",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "16",
+  "label": "16 Home missed",
+  "name": "S16HomeMissed",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "17",
+  "label": "17 Incoming call",
+  "name": "S17IncomingCall",
+  "dark": true,
+  "phStyle": "",
+  "hiDark": true
+ },
+ {
+  "id": "18",
+  "label": "18 Active call",
+  "name": "S18ActiveCall",
+  "dark": true,
+  "phStyle": "",
+  "hiDark": true
+ },
+ {
+  "id": "19",
+  "label": "19 Call done",
+  "name": "S19CallDone",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "23",
+  "label": "23 Health history",
+  "name": "S23HealthHistory",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "24",
+  "label": "24 Family link",
+  "name": "S24FamilyLink",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "25",
+  "label": "25 Appointments",
+  "name": "S25Appointments",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "26",
+  "label": "26 Settings",
+  "name": "S26Settings",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "HP1",
+  "label": "HP1 Helping parent home",
+  "name": "SHP1HelpingParentHome",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "27",
+  "label": "27 Empty states",
+  "name": "S27EmptyStates",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "28",
+  "label": "28 Error states",
+  "name": "S28ErrorStates",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "29",
+  "label": "29 Medicine detail",
+  "name": "S29MedicineDetail",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "30",
+  "label": "30 Med setup landing",
+  "name": "S30MedSetupLanding",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "31",
+  "label": "31 Add manual",
+  "name": "S31AddManual",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "32",
+  "label": "32 Edit medicine",
+  "name": "S32EditMedicine",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "33",
+  "label": "33 Setup done",
+  "name": "S33SetupDone",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "34",
+  "label": "34 Connecting",
+  "name": "S34Connecting",
+  "dark": true,
+  "phStyle": "",
+  "hiDark": true
+ },
+ {
+  "id": "35",
+  "label": "35 Listening",
+  "name": "S35Listening",
+  "dark": true,
+  "phStyle": "",
+  "hiDark": true
+ },
+ {
+  "id": "36",
+  "label": "36 Speaking",
+  "name": "S36Speaking",
+  "dark": true,
+  "phStyle": "",
+  "hiDark": true
+ },
+ {
+  "id": "37",
+  "label": "37 Reconnecting",
+  "name": "S37Reconnecting",
+  "dark": true,
+  "phStyle": "",
+  "hiDark": true
+ },
+ {
+  "id": "38",
+  "label": "38 Voice entry",
+  "name": "S38VoiceEntry",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "39",
+  "label": "39 Invalid reading",
+  "name": "S39InvalidReading",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "40",
+  "label": "40 Reading saved",
+  "name": "S40ReadingSaved",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "41",
+  "label": "41 Invite",
+  "name": "S41Invite",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "42",
+  "label": "42 Remote setup",
+  "name": "S42RemoteSetup",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "43",
+  "label": "43 Parent confirm",
+  "name": "S43ParentConfirm",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "44",
+  "label": "44 Privacy",
+  "name": "S44Privacy",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "45",
+  "label": "45 Rx error",
+  "name": "S45RxError",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "46",
+  "label": "46 Today",
+  "name": "S46Today",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "47",
+  "label": "47 Help",
+  "name": "S47Help",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ },
+ {
+  "id": "48",
+  "label": "48 Notif denied",
+  "name": "S48NotifDenied",
+  "dark": false,
+  "phStyle": "",
+  "hiDark": false
+ }
+]

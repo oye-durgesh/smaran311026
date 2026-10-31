@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#1A1410; font-family:'Inter',system-ui,sans-serif; color:#2E241B; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .serif { font-family:'Source Serif 4',Georgia,serif; letter-spacing:-0.01em; }
+  .phone { width:390px; height:844px; border-radius:44px; background:#F5EFE6; position:relative; overflow:hidden; box-shadow:0 0 0 10px #1A1410,0 0 0 12px #2E241B,0 30px 60px rgba(46,36,27,0.18); }
+  .statusbar { position:absolute; top:0; left:0; right:0; height:47px; padding:0 30px; display:flex; align-items:flex-end; justify-content:space-between; padding-bottom:8px; font-size:15px; font-weight:600; z-index:5; }
+  .home-indicator { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; opacity:0.9; }
+  .screen-body { position:absolute; top:47px; left:0; right:0; bottom:0; }
+  @keyframes s-fade { from { opacity:0 } to { opacity:1 } }
+  @keyframes s-fadeup { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+  @keyframes s-scale { 0% { opacity:0; transform:scale(0.8) } 65% { transform:scale(1.06) } 100% { opacity:1; transform:scale(1) } }
+  @keyframes s-draw360 { from { stroke-dashoffset:var(--dash) } to { stroke-dashoffset:0 } }
+  @keyframes s-pulse { 0% { transform:scale(0.6); opacity:0.45 } 100% { transform:scale(2.1); opacity:0 } }
+  @keyframes s-settle { 0% { transform:scale(1) } 40% { transform:scale(1.025) } 100% { transform:scale(1) } }
+  .anim-fade { opacity:0; animation:s-fade 400ms ease-out forwards; }
+  .anim-fadeup { opacity:0; transform:translateY(8px); animation:s-fadeup 350ms ease-out forwards; }
+  .anim-scale { opacity:0; animation:s-scale 500ms cubic-bezier(0.34,1.4,0.55,1) forwards; }
+</style>
+</head>
+<body>
+<title>Samran — 01 Splash</title>
+<div class="phone" data-screen-label="01 Splash">
+        <div class="statusbar"><span>9:41</span><span style="display:flex; gap:6px; align-items:center;"><span style="width:17px; height:11px; border:1px solid #2E241B; border-radius:2px; display:inline-block;"></span></span></div>
+        <div class="screen-body">
+          <div class="anim-fade" style="animation-duration:400ms; position:absolute; inset:0; background: radial-gradient(ellipse 90% 60% at 50% 30%, #D4A57C 0%, rgba(196,184,206,0.55) 35%, rgba(245,239,230,0) 70%);"></div>
+          <div style="position:relative; display:flex; flex-direction:column; align-items:center; padding:24px 32px 100px; height:100%; box-sizing:border-box; justify-content:space-between;">
+            <div></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:24px;">
+              <div style="position:relative; width:240px; height:240px; display:flex; align-items:center; justify-content:center;">
+                <svg width="240" height="240" viewBox="0 0 240 240" style="position:absolute; inset:0;">
+                  <circle cx="120" cy="120" r="115" fill="none" stroke="#A89584" stroke-width="1" stroke-linecap="round" stroke-dasharray="722.6" stroke-dashoffset="722.6" style="--dash:722.6; animation: s-draw360 600ms 600ms ease-out forwards; transform: rotate(-90deg); transform-origin: 120px 120px;"/>
+                </svg>
+                <img src="uploads/samran-logo.png" alt="samran" class="anim-scale" style="width:210px; height:210px; object-fit:contain; animation-delay:300ms; animation-duration:500ms;"/>
+              </div>
+              <div class="anim-fadeup" style="animation-delay:1000ms; font-size:15px; color:#7A6B5D; text-align:center; max-width:280px; line-height:1.5;">Your voice companion for medicine and daily care.</div>
+            </div>
+            <div class="anim-fade" style="animation-delay:1200ms; animation-duration:400ms; width:100%; display:flex; flex-direction:column; align-items:center; gap:20px;">
+              <div style="display:flex; gap:8px;">
+                <span style="width:8px; height:8px; border-radius:50%; background:#2E241B;"></span>
+                <span style="width:8px; height:8px; border-radius:50%; border:1px solid #A89584;"></span>
+                <span style="width:8px; height:8px; border-radius:50%; border:1px solid #A89584;"></span>
+              </div>
+              <div style="width:100%; height:56px; background:#2E241B; border-radius:999px; display:flex; align-items:center; justify-content:center; color:#F5EFE6; font-size:16px; font-weight:500;">Next</div>
+              <div style="font-size:15px; color:#7A6B5D;">Skip</div>
+            </div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+</body>
+</html>

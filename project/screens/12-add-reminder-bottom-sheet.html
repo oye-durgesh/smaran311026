@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#1A1410; font-family:'Inter',system-ui,sans-serif; color:#2E241B; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .serif { font-family:'Source Serif 4',Georgia,serif; letter-spacing:-0.01em; }
+  .phone { width:390px; height:844px; border-radius:44px; background:#F5EFE6; position:relative; overflow:hidden; box-shadow:0 0 0 10px #1A1410,0 0 0 12px #2E241B,0 30px 60px rgba(46,36,27,0.18); }
+  .statusbar { position:absolute; top:0; left:0; right:0; height:47px; padding:0 30px; display:flex; align-items:flex-end; justify-content:space-between; padding-bottom:8px; font-size:15px; font-weight:600; z-index:5; }
+  .home-indicator { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; opacity:0.9; }
+  .screen-body { position:absolute; top:47px; left:0; right:0; bottom:0; }
+  @keyframes s-fade { from { opacity:0 } to { opacity:1 } }
+  @keyframes s-fadeup { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+  @keyframes s-scale { 0% { opacity:0; transform:scale(0.8) } 65% { transform:scale(1.06) } 100% { opacity:1; transform:scale(1) } }
+  @keyframes s-draw360 { from { stroke-dashoffset:var(--dash) } to { stroke-dashoffset:0 } }
+  @keyframes s-pulse { 0% { transform:scale(0.6); opacity:0.45 } 100% { transform:scale(2.1); opacity:0 } }
+  @keyframes s-settle { 0% { transform:scale(1) } 40% { transform:scale(1.025) } 100% { transform:scale(1) } }
+  .anim-fade { opacity:0; animation:s-fade 400ms ease-out forwards; }
+  .anim-fadeup { opacity:0; transform:translateY(8px); animation:s-fadeup 350ms ease-out forwards; }
+  .anim-scale { opacity:0; animation:s-scale 500ms cubic-bezier(0.34,1.4,0.55,1) forwards; }
+</style>
+</head>
+<body>
+<title>Samran — 12 Add reminder · Bottom sheet</title>
+<div class="phone" data-screen-label="12 Add reminder sheet">
+        <div class="statusbar"><span>9:41</span><span style="width:17px; height:11px; border:1px solid #2E241B; border-radius:2px;"></span></div>
+        <div class="screen-body" style="background:rgba(46,36,27,0.15);">
+          <div style="position:absolute; top:0; left:0; right:0; padding:24px; opacity:0.45;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="serif" style="font-size:22px; color:#2E241B;">Good morning, Ramesh</div>
+              <div style="width:36px; height:36px; border-radius:50%; border:1px solid #E8DFD1;"></div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:20px;">
+              <div style="padding:6px 12px; border:1px solid #E8DFD1; border-radius:999px; font-size:13px; color:#7A6B5D;">2 medicines today</div>
+              <div style="padding:6px 12px; border:1px solid #7A9B6B; border-radius:999px; font-size:13px; color:#7A9B6B;">1 taken</div>
+            </div>
+          </div>
+          <div style="position:absolute; bottom:0; left:0; right:0; background:#FFFFFF; border-radius:24px 24px 0 0; padding:12px 24px 40px; box-sizing:border-box; height:55%;">
+            <div style="width:36px; height:4px; background:#E8DFD1; border-radius:2px; margin:0 auto 20px;"></div>
+            <div class="serif" style="font-size:22px; color:#2E241B;">What would you like to add?</div>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
+              <div style="background:#FFFFFF; border:1px solid #E8DFD1; border-radius:14px; height:72px; padding:12px 16px; display:flex; align-items:center; gap:14px; box-shadow: inset 3px 0 0 #B87D5A;">
+                <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#D4A57C,#B87D5A); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)"/></svg></div>
+                <div style="flex:1;"><div style="font-size:16px; font-weight:500; color:#2E241B;">Medicine</div><div style="font-size:13px; color:#7A6B5D; margin-top:2px;">Get reminded to take a dose</div></div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A89584" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <div style="background:#FFFFFF; border:1px solid #E8DFD1; border-radius:14px; height:72px; padding:12px 16px; display:flex; align-items:center; gap:14px; box-shadow: inset 3px 0 0 #7B95A8;">
+                <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#D4DEE6,#A8BCC8); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5"><path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/></svg></div>
+                <div style="flex:1;"><div style="font-size:16px; font-weight:500; color:#2E241B;">Water</div><div style="font-size:13px; color:#7A6B5D; margin-top:2px;">Stay reminded to drink water through the day</div></div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A89584" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <div style="background:#FFFFFF; border:1px solid #E8DFD1; border-radius:14px; height:72px; padding:12px 16px; display:flex; align-items:center; gap:14px; box-shadow: inset 3px 0 0 #7A9B6B;">
+                <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#B5C4A0,#9AB08A); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+                <div style="flex:1;"><div style="font-size:16px; font-weight:500; color:#2E241B;">Routine</div><div style="font-size:13px; color:#7A6B5D; margin-top:2px;">Walks, checkups, or anything else daily</div></div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A89584" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "name": "smaran",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck:functions": "tsc -p ../supabase/functions/tsconfig.json",
+    "dev:api": "node --experimental-strip-types server/dev-server.ts",
+    "sarvam:smoke": "node --experimental-strip-types scripts/sarvam-smoke.ts",
+    "e2e:sarvam": "node e2e/sarvam-flow.mjs",
+    "e2e:family": "node e2e/family-flow.mjs",
+    "e2e:auth": "node e2e/auth-flow.mjs",
+    "e2e:stock": "node e2e/stock-flow.mjs",
+    "e2e:demo": "node e2e/demo-flow.mjs",
+    "check": "npm run typecheck:functions && npm test && npm run build"
+  },
+  "dependencies": {
+    "@elevenlabs/client": "^1.32.0",
+    "@supabase/supabase-js": "^2.45.4",
+    "fflate": "^0.8.3",
+    "qrcode-generator": "^1.4.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "@types/node": "^26.6.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/web-push": "^3.6.4",
+    "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.8",
+    "web-push": "^3.6.7"
+  }
+}

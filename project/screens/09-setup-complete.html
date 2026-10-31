@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#1A1410; font-family:'Inter',system-ui,sans-serif; color:#2E241B; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .serif { font-family:'Source Serif 4',Georgia,serif; letter-spacing:-0.01em; }
+  .phone { width:390px; height:844px; border-radius:44px; background:#F5EFE6; position:relative; overflow:hidden; box-shadow:0 0 0 10px #1A1410,0 0 0 12px #2E241B,0 30px 60px rgba(46,36,27,0.18); }
+  .statusbar { position:absolute; top:0; left:0; right:0; height:47px; padding:0 30px; display:flex; align-items:flex-end; justify-content:space-between; padding-bottom:8px; font-size:15px; font-weight:600; z-index:5; }
+  .home-indicator { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; opacity:0.9; }
+  .screen-body { position:absolute; top:47px; left:0; right:0; bottom:0; }
+  @keyframes s-fade { from { opacity:0 } to { opacity:1 } }
+  @keyframes s-fadeup { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+  @keyframes s-scale { 0% { opacity:0; transform:scale(0.8) } 65% { transform:scale(1.06) } 100% { opacity:1; transform:scale(1) } }
+  @keyframes s-draw360 { from { stroke-dashoffset:var(--dash) } to { stroke-dashoffset:0 } }
+  @keyframes s-pulse { 0% { transform:scale(0.6); opacity:0.45 } 100% { transform:scale(2.1); opacity:0 } }
+  @keyframes s-settle { 0% { transform:scale(1) } 40% { transform:scale(1.025) } 100% { transform:scale(1) } }
+  .anim-fade { opacity:0; animation:s-fade 400ms ease-out forwards; }
+  .anim-fadeup { opacity:0; transform:translateY(8px); animation:s-fadeup 350ms ease-out forwards; }
+  .anim-scale { opacity:0; animation:s-scale 500ms cubic-bezier(0.34,1.4,0.55,1) forwards; }
+</style>
+</head>
+<body>
+<title>Samran — 09 Setup complete</title>
+<div class="phone" data-screen-label="09 Complete">
+        <div class="statusbar"><span>9:41</span><span style="width:17px; height:11px; border:1px solid #2E241B; border-radius:2px;"></span></div>
+        <div class="screen-body">
+          <div style="position:absolute; inset:0; background: radial-gradient(ellipse 90% 60% at 50% 20%, rgba(212,165,124,0.5) 0%, rgba(196,184,206,0.35) 40%, rgba(245,239,230,0) 75%);"></div>
+          <div style="position:relative; padding:24px 24px 100px; box-sizing:border-box; height:100%; display:flex; flex-direction:column; align-items:center;">
+            <div style="flex:1;"></div>
+            <div style="position:relative; width:120px; height:120px; display:flex; align-items:center; justify-content:center; animation: s-settle 350ms 700ms ease-out both;">
+              <div style="position:absolute; width:160px; height:160px; border-radius:50%; background:radial-gradient(circle, rgba(122,155,107,0.25) 0%, rgba(122,155,107,0) 70%); top:-20px; left:-20px;"></div>
+              <div style="position:absolute; inset:0; border-radius:50%; background:#7A9B6B; opacity:0; animation: s-pulse 500ms 400ms ease-out forwards;"></div>
+              <svg width="120" height="120" viewBox="0 0 120 120" style="position:absolute; inset:0;">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#7A9B6B" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" style="--dash:326.7; animation: s-draw360 400ms 100ms ease-out forwards; transform: rotate(-90deg); transform-origin: 60px 60px;"/>
+                <path d="M40 62 L54 76 L82 48" fill="none" stroke="#7A9B6B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="60" stroke-dashoffset="60" style="--dash:60; animation: s-draw360 250ms 500ms ease-out forwards;"/>
+              </svg>
+            </div>
+            <div class="serif anim-fadeup" style="animation-delay:800ms; font-size:26px; color:#2E241B; margin-top:28px; text-align:center;">You're all set, Ramesh.</div>
+            <div class="anim-fadeup" style="animation-delay:900ms; font-size:15px; color:#7A6B5D; margin-top:16px; text-align:center; max-width:300px; line-height:1.5;">Sathi will call you at 8:00 AM for your Metformin.</div>
+            <div class="anim-fadeup" style="animation-delay:1000ms; display:flex; align-items:center; gap:6px; margin-top:20px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#7B8B5A"><path d="M6 4l14 8-14 8V4z"/></svg>
+              <span style="font-size:14px; color:#7B8B5A;">Hear Sathi say this</span>
+            </div>
+            <div style="flex:1;"></div>
+            <div class="anim-fadeup" style="animation-delay:1050ms; width:100%; height:56px; background:#2E241B; border-radius:999px; display:flex; align-items:center; justify-content:center; color:#F5EFE6; font-size:16px; font-weight:500; margin-top:32px; box-shadow:0 4px 12px rgba(46,36,27,0.12);">Go to Home</div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+</body>
+</html>
