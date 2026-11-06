@@ -4,12 +4,25 @@
 import type { Env } from './elevenlabs.ts'
 import { configuredAgent, type AgentWho } from './elevenlabs.ts'
 import { MEDICINE_TOOL_NAMES } from './medicine-tools.ts'
+import { logStage, sanitizeErrorMessage } from './safe-log.ts'
 
 const HARDCODED = /\b(metformin|amlodipine|ecosprin|atorvastatin|ramesh|05:51|08:30\s*pm|12:25|3:52|15:52)\b/i
-export const TOOLS_PROMPT_VERSION = 'SMARAN_TOOLS_V3'
+export const TOOLS_PROMPT_VERSION = 'SMARAN_TOOLS_V4'
 export const DEFAULT_TOOLS_WEBHOOK_URL = 'https://oqcfpdfhtwvpirhcusbi.supabase.co/functions/v1/elevenlabs-tools'
 const MARKER = `<!-- ${TOOLS_PROMPT_VERSION} -->`
 const GENERIC_FIRST = 'नमस्ते, मैं साथी हूँ, एक एआई साथी। मैं आपके स्मारण रिकॉर्ड से अभी की दवाई और समय देखती हूँ।'
+const KEEP_TOOL_FIELDS = [
+  'assignments',
+  'execution_mode',
+  'response_timeout_secs',
+  'follow_redirects',
+  'follow_redirects_allowed_domains',
+  'interruption_mode',
+  'pre_tool_speech',
+  'tool_call_sound',
+  'tool_call_sound_behavior',
+  'tool_error_handling_mode',
+] as const
 
 export const TOOL_PROMPT_ADDENDUM = [
   MARKER,
@@ -24,39 +37,33 @@ export const TOOL_PROMPT_ADDENDUM = [
   'Speak in the language given by speak_in / language on the tool result.',
 ].join(' ')
 
+const sessionProp = { type: 'string', dynamic_variable: 'smaran_session' }
+
 const schemas: Record<string, { description: string; properties: Record<string, unknown>; required?: string[] }> = {
   get_triggering_dose: {
     description: 'Fetch the exact dose bound to this reminder call from the Smaran database (name, strength, dose, HH:MM). Call this first on a reminder call. Do not guess.',
-    properties: {
-      smaran_session: { type: 'string', description: 'Pass the smaran_session dynamic variable unchanged.' },
-    },
+    properties: { smaran_session: sessionProp },
     required: ['smaran_session'],
   },
   get_medicine_schedule: {
     description: 'Fetch the current active medicines and exact clock times from the Smaran database for this conversation’s family member.',
-    properties: {
-      smaran_session: { type: 'string', description: 'Pass the smaran_session dynamic variable unchanged.' },
-    },
+    properties: { smaran_session: sessionProp },
     required: ['smaran_session'],
   },
   get_todays_medicine_status: {
     description: 'Fetch today’s dose occurrences and statuses (upcoming, due, taken, skipped, snoozed, overdue) from the database.',
-    properties: {
-      smaran_session: { type: 'string', description: 'Pass the smaran_session dynamic variable unchanged.' },
-    },
+    properties: { smaran_session: sessionProp },
     required: ['smaran_session'],
   },
   get_next_medicine_dose: {
     description: 'If this call is bound to a reminder, return that occurrence. Otherwise return the next pending dose from the database.',
-    properties: {
-      smaran_session: { type: 'string', description: 'Pass the smaran_session dynamic variable unchanged.' },
-    },
+    properties: { smaran_session: sessionProp },
     required: ['smaran_session'],
   },
   mark_medicine_taken: {
     description: 'Mark one scheduled dose as taken after the person confirms the medicine and time. Never mark taken only because a medicine was mentioned.',
     properties: {
-      smaran_session: { type: 'string', description: 'Pass the smaran_session dynamic variable unchanged.' },
+      smaran_session: sessionProp,
       medicine_name: { type: 'string', description: 'Medicine name the person confirmed.' },
       medicine_id: { type: 'string', description: 'Medicine id from a previous tool result, if available.' },
       time: { type: 'string', description: 'Exact HH:MM of the dose occurrence.' },
@@ -68,11 +75,11 @@ const schemas: Record<string, { description: string; properties: Record<string, 
   snooze_medicine_reminder: {
     description: 'Snooze one confirmed dose occurrence and return the new reminder time.',
     properties: {
-      smaran_session: { type: 'string', description: 'Pass the smaran_session dynamic variable unchanged.' },
-      medicine_name: { type: 'string' },
-      medicine_id: { type: 'string' },
-      time: { type: 'string' },
-      occurrence_id: { type: 'string' },
+      smaran_session: sessionProp,
+      medicine_name: { type: 'string', description: 'Medicine name the person confirmed.' },
+      medicine_id: { type: 'string', description: 'Medicine id from a previous tool result.' },
+      time: { type: 'string', description: 'Exact HH:MM of the dose occurrence.' },
+      occurrence_id: { type: 'string', description: 'Occurrence id from a previous tool result.' },
       minutes: { type: 'number', description: '5, 10, or 15.' },
       confirmed: { type: 'boolean', description: 'true only after the person confirmed this specific dose.' },
     },
@@ -80,9 +87,7 @@ const schemas: Record<string, { description: string; properties: Record<string, 
   },
   get_medicine_history: {
     description: 'Return recent dose history for this conversation’s family member from the database.',
-    properties: {
-      smaran_session: { type: 'string', description: 'Pass the smaran_session dynamic variable unchanged.' },
-    },
+    properties: { smaran_session: sessionProp },
     required: ['smaran_session'],
   },
 }
@@ -148,7 +153,7 @@ type AgentPayload = {
   conversation_config?: {
     agent?: {
       first_message?: string
-      prompt?: { prompt?: string; tool_ids?: string[]; [k: string]: unknown }
+      prompt?: { prompt?: string; tool_ids?: string[]; tools?: unknown; [k: string]: unknown }
       [k: string]: unknown
     }
     [k: string]: unknown
@@ -158,6 +163,15 @@ type AgentPayload = {
 
 const ready = new Map<string, { version: string; at: number }>()
 export function resetEnsureAgentToolsCache() { ready.clear() }
+
+export type EnsureToolsResult = {
+  ok: boolean
+  hardcoded: boolean
+  skipped?: boolean
+  error?: string
+  stage?: string
+  status?: number
+}
 
 type ListedTool = {
   id?: string
@@ -169,18 +183,18 @@ type ListedTool = {
 }
 
 function mergeToolConfig(prev: Record<string, unknown> | undefined, next: ReturnType<typeof medicineToolConfig>) {
-  const prevSchema = (prev?.api_schema && typeof prev.api_schema === 'object') ? prev.api_schema as Record<string, unknown> : {}
-  const prevDyn = (prev?.dynamic_variables && typeof prev.dynamic_variables === 'object') ? prev.dynamic_variables as Record<string, unknown> : {}
-  const prevPlace = (prevDyn.dynamic_variable_placeholders && typeof prevDyn.dynamic_variable_placeholders === 'object')
-    ? prevDyn.dynamic_variable_placeholders as Record<string, unknown>
-    : {}
+  const kept: Record<string, unknown> = {}
+  if (prev) {
+    for (const k of KEEP_TOOL_FIELDS) {
+      if (prev[k] !== undefined) kept[k] = prev[k]
+    }
+  }
   return {
-    ...prev,
+    ...kept,
     name: next.name,
     description: next.description,
     type: 'webhook',
     api_schema: {
-      ...prevSchema,
       url: next.api_schema.url,
       method: next.api_schema.method,
       content_type: next.api_schema.content_type,
@@ -188,90 +202,142 @@ function mergeToolConfig(prev: Record<string, unknown> | undefined, next: Return
       request_body_schema: next.api_schema.request_body_schema,
     },
     dynamic_variables: {
-      ...prevDyn,
-      dynamic_variable_placeholders: { ...prevPlace, smaran_session: 'smaran_session' },
+      dynamic_variable_placeholders: { smaran_session: 'smaran_session' },
     },
   }
 }
 
-export async function ensureAgentTools(env: Env, who: AgentWho, f: typeof fetch = fetch): Promise<{ ok: boolean; hardcoded: boolean; skipped?: boolean; error?: string }> {
-  const key = (env('ELEVENLABS_API_KEY') ?? '').trim()
-  const cfg = configuredAgent(env, who)
-  if (!key || !cfg.ok) return { ok: false, hardcoded: false, error: 'not_configured' }
-  const secret = (env('SMARAN_TOOL_SECRET') ?? '').trim()
-  if (!secret) return { ok: false, hardcoded: false, error: 'missing_tool_secret' }
-
-  const cached = ready.get(cfg.agentId)
-  if (cached && cached.version === TOOLS_PROMPT_VERSION && Date.now() - cached.at < 10 * 60 * 1000) {
-    return { ok: true, hardcoded: false, skipped: true }
+async function convai(f: typeof fetch, url: string, init?: RequestInit): Promise<{ ok: boolean; status: number; body: unknown; error?: string }> {
+  try {
+    const r = await f(url, init)
+    const text = await r.text()
+    let body: unknown = {}
+    if (text) {
+      try { body = JSON.parse(text) } catch { body = {} }
+    }
+    return { ok: r.ok, status: r.status, body }
+  } catch (e) {
+    return { ok: false, status: 0, body: {}, error: sanitizeErrorMessage(e) }
   }
+}
 
-  const url = webhookUrl(env)
-  const api = `${env('ELEVENLABS_BASE_URL') ?? 'https://api.elevenlabs.io'}/v1/convai`
-  const headers = { 'xi-api-key': key, 'Content-Type': 'application/json' }
+async function listConvaiTools(api: string, headers: Record<string, string>, f: typeof fetch): Promise<EnsureToolsResult & { tools?: ListedTool[] }> {
+  const tools: ListedTool[] = []
+  let cursor = ''
+  for (let page = 0; page < 5; page++) {
+    const q = new URLSearchParams({ page_size: '100' })
+    if (cursor) q.set('cursor', cursor)
+    const list = await convai(f, `${api}/tools?${q.toString()}`, { headers })
+    if (!list.ok) {
+      return { ok: false, hardcoded: false, error: list.status ? `tools_list_${list.status}` : 'tools_list_network', stage: 'list_tools', status: list.status || 502 }
+    }
+    const listed = list.body as { tools?: ListedTool[]; has_more?: boolean; next_cursor?: string }
+    tools.push(...(listed.tools ?? []))
+    if (!listed.has_more || !listed.next_cursor) break
+    cursor = listed.next_cursor
+  }
+  return { ok: true, hardcoded: false, tools }
+}
 
-  const list = await f(`${api}/tools`, { headers })
-  if (!list.ok) return { ok: false, hardcoded: false, error: `tools_list_${list.status}` }
-  const listed = await list.json() as { tools?: ListedTool[] }
-  const have = new Map((listed.tools ?? []).filter((t) => t.id && t.tool_config?.name).map((t) => [t.tool_config!.name!, t]))
-  const ids: string[] = []
+export async function ensureAgentTools(env: Env, who: AgentWho, f: typeof fetch = fetch): Promise<EnsureToolsResult> {
+  try {
+    const key = (env('ELEVENLABS_API_KEY') ?? '').trim()
+    const cfg = configuredAgent(env, who)
+    if (!key || !cfg.ok) return { ok: false, hardcoded: false, error: 'not_configured', stage: 'secrets', status: 503 }
+    const secret = (env('SMARAN_TOOL_SECRET') ?? '').trim()
+    if (!secret) return { ok: false, hardcoded: false, error: 'missing_tool_secret', stage: 'secrets', status: 503 }
 
-  for (const name of MEDICINE_TOOL_NAMES) {
-    const next = medicineToolConfig(name, url, secret)
-    const existing = have.get(name)
-    if (existing?.id) {
-      let prevCfg: Record<string, unknown> | undefined = existing.tool_config as Record<string, unknown> | undefined
-      const detail = await f(`${api}/tools/${existing.id}`, { headers })
-      if (detail.ok) {
-        const dj = await detail.json() as ListedTool
-        if (dj.tool_config) prevCfg = dj.tool_config as Record<string, unknown>
+    const cached = ready.get(cfg.agentId)
+    if (cached && cached.version === TOOLS_PROMPT_VERSION && Date.now() - cached.at < 10 * 60 * 1000) {
+      return { ok: true, hardcoded: false, skipped: true, stage: 'cache' }
+    }
+
+    const url = webhookUrl(env)
+    const api = `${env('ELEVENLABS_BASE_URL') ?? 'https://api.elevenlabs.io'}/v1/convai`
+    const headers = { 'xi-api-key': key, 'Content-Type': 'application/json' }
+
+    const listed = await listConvaiTools(api, headers, f)
+    if (!listed.ok) {
+      logStage('ensureAgentTools', listed.stage ?? 'list_tools', { status: listed.status, error: listed.error })
+      return listed
+    }
+    const have = new Map((listed.tools ?? []).filter((t) => t.id && t.tool_config?.name).map((t) => [t.tool_config!.name!, t]))
+    const ids: string[] = []
+
+    for (const name of MEDICINE_TOOL_NAMES) {
+      const next = medicineToolConfig(name, url, secret)
+      const existing = have.get(name)
+      if (existing?.id) {
+        const prevCfg = (existing.tool_config ?? {}) as Record<string, unknown>
+        const patched = await convai(f, `${api}/tools/${existing.id}`, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ tool_config: mergeToolConfig(prevCfg, next) }),
+        })
+        if (!patched.ok) {
+          const error = patched.status ? `tool_patch_${name}_${patched.status}` : `tool_patch_${name}_network`
+          logStage('ensureAgentTools', 'patch_tool', { status: patched.status || 502, error })
+          return { ok: false, hardcoded: false, error, stage: 'patch_tool', status: patched.status || 502 }
+        }
+        ids.push(existing.id)
+        continue
       }
-      const patched = await f(`${api}/tools/${existing.id}`, {
+      const created = await convai(f, `${api}/tools`, { method: 'POST', headers, body: JSON.stringify({ tool_config: next }) })
+      if (!created.ok) {
+        const error = created.status ? `tool_create_${name}_${created.status}` : `tool_create_${name}_network`
+        logStage('ensureAgentTools', 'create_tool', { status: created.status || 502, error })
+        return { ok: false, hardcoded: false, error, stage: 'create_tool', status: created.status || 502 }
+      }
+      const j = created.body as { id?: string }
+      if (!j.id) return { ok: false, hardcoded: false, error: `tool_create_${name}_noid`, stage: 'create_tool', status: 502 }
+      ids.push(j.id)
+    }
+
+    if (ids.length !== MEDICINE_TOOL_NAMES.length) return { ok: false, hardcoded: false, error: 'tools_incomplete', stage: 'register_tools', status: 503 }
+
+    const agent = await convai(f, `${api}/agents/${cfg.agentId}`, { headers })
+    if (!agent.ok) {
+      const error = agent.status ? `agent_${agent.status}` : 'agent_network'
+      logStage('ensureAgentTools', 'get_agent', { status: agent.status || 502, error })
+      return { ok: false, hardcoded: false, error, stage: 'get_agent', status: agent.status || 502 }
+    }
+    const aj = agent.body as AgentPayload
+    const promptObj = { ...(aj.conversation_config?.agent?.prompt ?? {}) }
+    delete promptObj.tools
+    const currentPrompt = String(promptObj.prompt ?? '')
+    const applied = applyToolPrompt(currentPrompt)
+    const prevIds = Array.isArray(promptObj.tool_ids) ? promptObj.tool_ids as string[] : []
+    const tool_ids = [...new Set([...prevIds, ...ids])]
+    const attached = ids.every((id) => tool_ids.includes(id))
+    const first = aj.conversation_config?.agent?.first_message ?? ''
+    const firstDirty = HARDCODED.test(first)
+    const hardcoded = promptHasHardcodedSchedule(currentPrompt) || firstDirty
+    const agentNeedsPatch = applied.changed || firstDirty || !attached || !currentPrompt.includes(MARKER)
+
+    if (agentNeedsPatch) {
+      const agentCfg = { ...(aj.conversation_config?.agent ?? {}) }
+      delete agentCfg.disable_interruptions
+      delete agentCfg.force_pre_tool_speech
+      agentCfg.prompt = { ...promptObj, prompt: applied.prompt, tool_ids }
+      if (firstDirty) agentCfg.first_message = GENERIC_FIRST
+      const patched = await convai(f, `${api}/agents/${cfg.agentId}`, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({ tool_config: mergeToolConfig(prevCfg, next) }),
+        body: JSON.stringify({
+          conversation_config: { ...(aj.conversation_config ?? {}), agent: agentCfg },
+        }),
       })
-      if (!patched.ok) return { ok: false, hardcoded: false, error: `tool_patch_${name}_${patched.status}` }
-      ids.push(existing.id)
-      continue
+      if (!patched.ok) {
+        const error = patched.status ? `agent_patch_${patched.status}` : 'agent_patch_network'
+        logStage('ensureAgentTools', 'patch_agent', { status: patched.status || 502, error })
+        return { ok: false, hardcoded, error, stage: 'patch_agent', status: patched.status || 502 }
+      }
     }
-    const created = await f(`${api}/tools`, { method: 'POST', headers, body: JSON.stringify({ tool_config: next }) })
-    if (!created.ok) return { ok: false, hardcoded: false, error: `tool_create_${name}_${created.status}` }
-    const j = await created.json() as { id?: string }
-    if (!j.id) return { ok: false, hardcoded: false, error: `tool_create_${name}_noid` }
-    ids.push(j.id)
+
+    ready.set(cfg.agentId, { version: TOOLS_PROMPT_VERSION, at: Date.now() })
+    return { ok: true, hardcoded: false, stage: 'ready' }
+  } catch (e) {
+    logStage('ensureAgentTools', 'unhandled', { status: 503, error: e })
+    return { ok: false, hardcoded: false, error: 'tools_exception', stage: 'unhandled', status: 503 }
   }
-
-  if (ids.length !== MEDICINE_TOOL_NAMES.length) return { ok: false, hardcoded: false, error: 'tools_incomplete' }
-
-  const agent = await f(`${api}/agents/${cfg.agentId}`, { headers })
-  if (!agent.ok) return { ok: false, hardcoded: false, error: `agent_${agent.status}` }
-  const aj = await agent.json() as AgentPayload
-  const promptObj = { ...(aj.conversation_config?.agent?.prompt ?? {}) }
-  const currentPrompt = String(promptObj.prompt ?? '')
-  const applied = applyToolPrompt(currentPrompt)
-  const prevIds = Array.isArray(promptObj.tool_ids) ? promptObj.tool_ids as string[] : []
-  const tool_ids = [...new Set([...prevIds, ...ids])]
-  const attached = ids.every((id) => tool_ids.includes(id))
-  const first = aj.conversation_config?.agent?.first_message ?? ''
-  const firstDirty = HARDCODED.test(first)
-  const hardcoded = promptHasHardcodedSchedule(currentPrompt) || firstDirty
-  const agentNeedsPatch = applied.changed || firstDirty || !attached || !currentPrompt.includes(MARKER)
-
-  if (agentNeedsPatch) {
-    const agentCfg = { ...(aj.conversation_config?.agent ?? {}) }
-    agentCfg.prompt = { ...promptObj, prompt: applied.prompt, tool_ids }
-    if (firstDirty) agentCfg.first_message = GENERIC_FIRST
-    const patched = await f(`${api}/agents/${cfg.agentId}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({
-        conversation_config: { ...(aj.conversation_config ?? {}), agent: agentCfg },
-      }),
-    })
-    if (!patched.ok) return { ok: false, hardcoded, error: `agent_patch_${patched.status}` }
-  }
-
-  ready.set(cfg.agentId, { version: TOOLS_PROMPT_VERSION, at: Date.now() })
-  return { ok: true, hardcoded: false }
 }

@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import { signToolSession, verifyToolSession, relAllowedForAgent } from '../supabase/functions/_shared/tool-session.ts'
 import { MEDICINE_TOOL_NAMES, runMedicineTool, speakTimeHi, validateCallOccurrence, type MedRow, type MedicineStore, type MemberRow, type RemRow } from '../supabase/functions/_shared/medicine-tools.ts'
-import { applyToolPrompt, ensureAgentTools, promptHasHardcodedSchedule, resetEnsureAgentToolsCache, webhookUrl } from '../supabase/functions/_shared/register-tools.ts'
+import { applyToolPrompt, ensureAgentTools, medicineToolConfig, promptHasHardcodedSchedule, resetEnsureAgentToolsCache, webhookUrl } from '../supabase/functions/_shared/register-tools.ts'
+import { issueElevenLabsSession } from '../supabase/functions/_shared/issue-session.ts'
+import { sanitizeErrorMessage } from '../supabase/functions/_shared/safe-log.ts'
 
 const SECRET = 'test-tool-secret'
 
@@ -352,17 +354,26 @@ async function main() {
     const existing = Object.fromEntries(MEDICINE_TOOL_NAMES.map((n, i) => [n, `tool-id-${i}`]))
     const patches: { id: string; url: string; method: string; content_type: string; headers: string[]; name: string; sessionPlaceholder?: string }[] = []
     const agentPatches: unknown[] = []
+    const pathOf = (u: string) => { try { return new URL(u).pathname } catch { return u.split('?')[0] } }
     const fakeFetch: typeof fetch = async (input, init) => {
       const u = String(input)
       const method = (init?.method ?? 'GET').toUpperCase()
-      if (u.endsWith('/tools') && method === 'GET') {
+      if (pathOf(u).endsWith('/tools') && method === 'GET') {
         return new Response(JSON.stringify({
-          tools: MEDICINE_TOOL_NAMES.map((n) => ({ id: existing[n], tool_config: { name: n, api_schema: { url: 'https://old.example/hook', method: 'GET' } } })),
+          tools: MEDICINE_TOOL_NAMES.map((n) => ({
+            id: existing[n],
+            tool_config: {
+              name: n,
+              disable_interruptions: true,
+              force_pre_tool_speech: true,
+              api_schema: { url: 'https://old.example/hook', method: 'GET' },
+            },
+          })),
         }), { status: 200 })
       }
       const patchTool = u.match(/\/tools\/(tool-id-\d+)$/)
       if (patchTool && method === 'PATCH') {
-        const body = JSON.parse(String(init?.body ?? '{}')) as { tool_config?: { name?: string; api_schema?: { url?: string; method?: string; content_type?: string; request_headers?: Record<string, string>; request_body_schema?: { required?: string[] } }; dynamic_variables?: { dynamic_variable_placeholders?: Record<string, string> } } }
+        const body = JSON.parse(String(init?.body ?? '{}')) as { tool_config?: { name?: string; disable_interruptions?: boolean; api_schema?: { url?: string; method?: string; content_type?: string; request_headers?: Record<string, string>; request_body_schema?: { required?: string[]; properties?: Record<string, { description?: string; dynamic_variable?: string }> } }; dynamic_variables?: { dynamic_variable_placeholders?: Record<string, string> } } }
         const cfg = body.tool_config
         patches.push({
           id: patchTool[1],
@@ -373,6 +384,10 @@ async function main() {
           name: cfg?.api_schema?.request_headers?.['X-Smaran-Tool-Name'] ?? '',
           sessionPlaceholder: cfg?.dynamic_variables?.dynamic_variable_placeholders?.smaran_session,
         })
+        assert.equal(cfg?.disable_interruptions, undefined)
+        const sess = cfg?.api_schema?.request_body_schema?.properties?.smaran_session
+        assert.equal(sess?.dynamic_variable, 'smaran_session')
+        assert.equal(sess?.description, undefined)
         assert.equal(cfg?.api_schema?.request_headers?.['X-Smaran-Tool-Secret'], SECRET)
         assert.ok(cfg?.api_schema?.request_body_schema?.required?.includes('smaran_session'))
         return new Response('{}', { status: 200 })
@@ -393,7 +408,7 @@ async function main() {
         agentPatches.push(body)
         return new Response('{}', { status: 200 })
       }
-      if (u.endsWith('/tools') && method === 'POST') throw new Error('must PATCH existing tools, not create')
+      if (pathOf(u).endsWith('/tools') && method === 'POST') throw new Error('must PATCH existing tools, not create')
       return new Response('unexpected', { status: 500 })
     }
     const mom = await ensureAgentTools(toolsEnv, 'mummy', fakeFetch)
@@ -425,6 +440,192 @@ async function main() {
     const r = await ensureAgentTools((k) => k === 'ELEVENLABS_API_KEY' ? 'xi-test-key-not-secret' : k === 'ELEVENLABS_MOTHER_AGENT_ID' ? 'agent_mother_ok' : k === 'ELEVENLABS_FATHER_AGENT_ID' ? 'agent_father_ok' : undefined, 'mummy')
     assert.equal(r.ok, false)
     assert.equal(r.error, 'missing_tool_secret')
+  })
+
+  await check('smaran_session is a dynamic variable, not an LLM description', () => {
+    const cfg = medicineToolConfig('get_triggering_dose', 'https://example.test/fn', SECRET)
+    const prop = cfg.api_schema.request_body_schema.properties.smaran_session as { dynamic_variable?: string; description?: string }
+    assert.equal(prop.dynamic_variable, 'smaran_session')
+    assert.equal(prop.description, undefined)
+  })
+
+  const pathOf = (u: string) => { try { return new URL(u).pathname } catch { return u.split('?')[0] } }
+
+  await check('ensureAgentTools paginates the tools list', async () => {
+    resetEnsureAgentToolsCache()
+    const existing = Object.fromEntries(MEDICINE_TOOL_NAMES.map((n, i) => [n, `tool-id-${i}`]))
+    let pages = 0
+    const fakeFetch: typeof fetch = async (input, init) => {
+      const u = String(input)
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (pathOf(u).endsWith('/tools') && method === 'GET') {
+        pages += 1
+        if (pages === 1) {
+          return new Response(JSON.stringify({ tools: [{ id: 'other', tool_config: { name: 'unrelated' } }], has_more: true, next_cursor: 'c2' }), { status: 200 })
+        }
+        return new Response(JSON.stringify({
+          tools: MEDICINE_TOOL_NAMES.map((n) => ({ id: existing[n], tool_config: { name: n } })),
+          has_more: false,
+        }), { status: 200 })
+      }
+      if (/\/tools\/tool-id-\d+$/.test(u) && method === 'PATCH') return new Response('{}', { status: 200 })
+      if (u.includes('/agents/') && method === 'GET') {
+        return new Response(JSON.stringify({ conversation_config: { agent: { prompt: { prompt: 'Hi', tool_ids: Object.values(existing) } } } }), { status: 200 })
+      }
+      if (u.includes('/agents/') && method === 'PATCH') return new Response('{}', { status: 200 })
+      if (pathOf(u).endsWith('/tools') && method === 'POST') throw new Error('must find paginated tools')
+      return new Response('unexpected', { status: 500 })
+    }
+    const r = await ensureAgentTools(toolsEnv, 'mummy', fakeFetch)
+    assert.equal(r.ok, true)
+    assert.equal(pages, 2)
+  })
+
+  await check('ensureAgentTools reports ElevenLabs list failure', async () => {
+    resetEnsureAgentToolsCache()
+    const r = await ensureAgentTools(toolsEnv, 'mummy', async () => new Response('nope', { status: 500 }))
+    assert.equal(r.ok, false)
+    assert.equal(r.error, 'tools_list_500')
+    assert.equal(r.stage, 'list_tools')
+  })
+
+  await check('ensureAgentTools reports PATCH failure without throwing', async () => {
+    resetEnsureAgentToolsCache()
+    const fakeFetch: typeof fetch = async (input, init) => {
+      const u = String(input)
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (pathOf(u).endsWith('/tools') && method === 'GET') {
+        return new Response(JSON.stringify({
+          tools: MEDICINE_TOOL_NAMES.map((n, i) => ({ id: `tool-id-${i}`, tool_config: { name: n } })),
+        }), { status: 200 })
+      }
+      if (/\/tools\/tool-id-\d+$/.test(u) && method === 'PATCH') return new Response(JSON.stringify({ detail: 'bad schema' }), { status: 422 })
+      return new Response('unexpected', { status: 500 })
+    }
+    const r = await ensureAgentTools(toolsEnv, 'mummy', fakeFetch)
+    assert.equal(r.ok, false)
+    assert.match(r.error ?? '', /^tool_patch_get_triggering_dose_422$/)
+    assert.equal(r.stage, 'patch_tool')
+  })
+
+  const sessionEnv = toolsEnv
+  const memberRow = { id: momA, relationship: 'mother' as const, active: true }
+  const okToolsFetch: typeof fetch = async (input, init) => {
+    const u = String(input)
+    const method = (init?.method ?? 'GET').toUpperCase()
+    if (u.includes('/conversation/get-signed-url')) return new Response(JSON.stringify({ signed_url: 'wss://el.example/s' }), { status: 200 })
+    if (pathOf(u).endsWith('/tools') && method === 'GET') {
+      return new Response(JSON.stringify({
+        tools: MEDICINE_TOOL_NAMES.map((n, i) => ({ id: `tool-id-${i}`, tool_config: { name: n } })),
+      }), { status: 200 })
+    }
+    if (/\/tools\/tool-id-\d+$/.test(u) && method === 'PATCH') return new Response('{}', { status: 200 })
+    if (u.includes('/agents/') && method === 'GET') {
+      return new Response(JSON.stringify({ conversation_config: { agent: { prompt: { prompt: 'Hi', tool_ids: MEDICINE_TOOL_NAMES.map((_, i) => `tool-id-${i}`) } } } }), { status: 200 })
+    }
+    if (u.includes('/agents/') && method === 'PATCH') return new Response('{}', { status: 200 })
+    return new Response('unexpected', { status: 500 })
+  }
+
+  await check('session succeeds after tool registration', async () => {
+    resetEnsureAgentToolsCache()
+    const r = await issueElevenLabsSession({
+      env: sessionEnv,
+      userId: A,
+      personId: momA,
+      lookup: async () => memberRow,
+      store,
+      fetch: okToolsFetch,
+    })
+    assert.equal(r.status, 200)
+    assert.equal(r.body.agent, 'mummy')
+    assert.equal(typeof r.body.signedUrl, 'string')
+    assert.equal(typeof r.body.toolSession, 'string')
+    assert.equal('stage' in r.body ? r.body.stage : undefined, undefined)
+  })
+
+  await check('session fails closed without SMARAN_TOOL_SECRET', async () => {
+    resetEnsureAgentToolsCache()
+    const r = await issueElevenLabsSession({
+      env: (k) => k === 'SMARAN_TOOL_SECRET' ? undefined : sessionEnv(k),
+      userId: A,
+      personId: momA,
+      lookup: async () => memberRow,
+      store,
+      fetch: async () => { throw new Error('should not call ElevenLabs') },
+    })
+    assert.equal(r.status, 503)
+    assert.equal(r.body.code, 'missing_tool_secret')
+    assert.equal(r.body.stage, 'secrets')
+  })
+
+  await check('session reports ElevenLabs API failure', async () => {
+    resetEnsureAgentToolsCache()
+    const r = await issueElevenLabsSession({
+      env: sessionEnv,
+      userId: A,
+      personId: momA,
+      lookup: async () => memberRow,
+      store,
+      fetch: async () => new Response('down', { status: 500 }),
+    })
+    assert.equal(r.status, 502)
+    assert.equal(r.body.code, 'tools_list_failed')
+    assert.equal(r.body.stage, 'list_tools')
+  })
+
+  await check('session reports PATCH failure', async () => {
+    resetEnsureAgentToolsCache()
+    const fakeFetch: typeof fetch = async (input, init) => {
+      const u = String(input)
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (pathOf(u).endsWith('/tools') && method === 'GET') {
+        return new Response(JSON.stringify({
+          tools: MEDICINE_TOOL_NAMES.map((n, i) => ({ id: `tool-id-${i}`, tool_config: { name: n } })),
+        }), { status: 200 })
+      }
+      if (/\/tools\/tool-id-\d+$/.test(u) && method === 'PATCH') return new Response('{}', { status: 422 })
+      return new Response('unexpected', { status: 500 })
+    }
+    const r = await issueElevenLabsSession({
+      env: sessionEnv,
+      userId: A,
+      personId: momA,
+      lookup: async () => memberRow,
+      store,
+      fetch: fakeFetch,
+    })
+    assert.equal(r.status, 502)
+    assert.equal(r.body.code, 'tools_patch_failed')
+    assert.equal(r.body.stage, 'patch_tool')
+    assert.equal(typeof r.body.signedUrl, 'undefined')
+  })
+
+  await check('session reports signed-url failure after tools succeed', async () => {
+    resetEnsureAgentToolsCache()
+    const fakeFetch: typeof fetch = async (input, init) => {
+      const u = String(input)
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (u.includes('/conversation/get-signed-url')) return new Response('{}', { status: 500 })
+      return okToolsFetch(input, init)
+    }
+    const r = await issueElevenLabsSession({
+      env: sessionEnv,
+      userId: A,
+      personId: momA,
+      lookup: async () => memberRow,
+      store,
+      fetch: fakeFetch,
+    })
+    assert.equal(r.status, 502)
+    assert.equal(r.body.code, 'unavailable')
+    assert.equal(r.body.stage, 'signed_url')
+  })
+
+  await check('sanitizeErrorMessage never echoes secrets or signed URLs', () => {
+    const s = sanitizeErrorMessage('xi-api-key abc Authorization Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaabbbbccccdddd.eeeefghi smaran_session=tok signed_url=https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=x')
+    assert.equal(s.includes('eyJ'), false)
+    assert.equal(/xi-api-key|Bearer eyJ|smaran_session=tok|signed_url=https/i.test(s), false)
   })
 
   console.log('\nAll medicine-tool checks passed.')

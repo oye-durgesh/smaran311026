@@ -148,7 +148,7 @@ function voiceError(e: unknown): string {
     if (e.status === 401 || e.code === 'not_signed_in') return e.message
     if (e.status === 403 || e.code === 'profile_not_synced' || e.code === 'forbidden') return e.message
     if (e.code === 'missing_credentials' || e.code === 'auth') return 'Voice is not connected: the ElevenLabs API key was rejected or is missing. Ask the project owner to update the Edge Function secret.'
-    if (e.code === 'agent_not_configured' || e.code === 'agent_invalid' || e.code === 'agent_ids_identical' || e.code === 'tools_unavailable') return e.message
+    if (e.code === 'agent_not_configured' || e.code === 'agent_invalid' || e.code === 'agent_ids_identical' || e.code === 'tools_unavailable' || e.code === 'missing_tool_secret' || e.code === 'tools_patch_failed' || e.code === 'tools_create_failed' || e.code === 'tools_list_failed' || e.code === 'agent_update_failed' || e.code === 'session_failed') return e.message
     if (e.status === 429 || e.code === 'rate_limit') return 'The voice service is busy. Please try again shortly.'
     if (e.status === 502 || e.status === 500 || e.code === 'unavailable') return e.message || 'Could not start the voice session. Check your connection and try again.'
     return e.message
