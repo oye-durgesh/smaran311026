@@ -69,6 +69,7 @@ export interface VoiceService {
    */
   tryLiveCall(opts: {
     profileId: ProfileId
+    occurrenceId?: string
     onMode: (mode: 'listening' | 'speaking') => void
     onDisconnect: () => void
     onError: (message: string) => void
@@ -147,7 +148,7 @@ function voiceError(e: unknown): string {
     if (e.status === 401 || e.code === 'not_signed_in') return e.message
     if (e.status === 403 || e.code === 'profile_not_synced' || e.code === 'forbidden') return e.message
     if (e.code === 'missing_credentials' || e.code === 'auth') return 'Voice is not connected: the ElevenLabs API key was rejected or is missing. Ask the project owner to update the Edge Function secret.'
-    if (e.code === 'agent_not_configured' || e.code === 'agent_invalid' || e.code === 'agent_ids_identical') return e.message
+    if (e.code === 'agent_not_configured' || e.code === 'agent_invalid' || e.code === 'agent_ids_identical' || e.code === 'tools_unavailable') return e.message
     if (e.status === 429 || e.code === 'rate_limit') return 'The voice service is busy. Please try again shortly.'
     if (e.status === 502 || e.status === 500 || e.code === 'unavailable') return e.message || 'Could not start the voice session. Check your connection and try again.'
     return e.message
@@ -193,7 +194,10 @@ export async function tryLiveCall(opts: Parameters<VoiceService['tryLiveCall']>[
     resetVoiceDiag()
     voiceDiag.who = opts.profileId
     const ident = await resolveVoiceIdentity(opts.profileId)
-    const sess = await callFunction<{ signedUrl?: string; agent?: string; personId?: string; toolSession?: string }>('elevenlabs-session', { personId: ident.personId })
+    const sess = await callFunction<{ signedUrl?: string; agent?: string; personId?: string; toolSession?: string; reminderStatus?: string }>('elevenlabs-session', {
+      personId: ident.personId,
+      ...(opts.occurrenceId ? { occurrenceId: opts.occurrenceId } : {}),
+    })
     voiceDiag.fnStatus = 200
     const signedUrl = typeof sess.signedUrl === 'string' ? sess.signedUrl : ''
     voiceDiag.signedUrlReturned = /^(https|wss):\/\//i.test(signedUrl)

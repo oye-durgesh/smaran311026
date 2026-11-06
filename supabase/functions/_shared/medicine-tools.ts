@@ -5,6 +5,7 @@ import type { ToolAgent, ToolClaims, ToolRel } from './tool-session.ts'
 import { relAllowedForAgent } from './tool-session.ts'
 
 export type ToolName =
+  | 'get_triggering_dose'
   | 'get_medicine_schedule'
   | 'get_todays_medicine_status'
   | 'get_next_medicine_dose'
@@ -57,6 +58,7 @@ export interface MemberRow {
 export interface MedicineStore {
   getMember(ownerId: string, memberId: string): Promise<MemberRow | null>
   listMedicines(ownerId: string, memberId: string): Promise<MedRow[]>
+  getMedicine(ownerId: string, id: string): Promise<MedRow | null>
   listReminders(ownerId: string, memberId: string, fromIso: string, toIso: string): Promise<RemRow[]>
   getReminder(ownerId: string, id: string): Promise<RemRow | null>
   upsertReminder(row: RemRow): Promise<RemRow>
@@ -112,7 +114,77 @@ export function speakTime(hhmm: string): string {
   const ap = h >= 12 ? 'PM' : 'AM'
   return `${h % 12 || 12}:${pad(m)} ${ap}`
 }
+
+/** Hindi clock phrasing from any HH:MM. No example times are special-cased. */
+const HI_0_59 = [
+  'शून्य', 'एक', 'दो', 'तीन', 'चार', 'पाँच', 'छह', 'सात', 'आठ', 'नौ', 'दस',
+  'ग्यारह', 'बारह', 'तेरह', 'चौदह', 'पंद्रह', 'सोलह', 'सत्रह', 'अठारह', 'उन्नीस', 'बीस',
+  'इक्कीस', 'बाईस', 'तेईस', 'चौबीस', 'पच्चीस', 'छब्बीस', 'सत्ताईस', 'अट्ठाईस', 'उनतीस', 'तीस',
+  'इकतीस', 'बत्तीस', 'तैंतीस', 'चौंतीस', 'पैंतीस', 'छत्तीस', 'सैंतीस', 'अड़तीस', 'उनतालीस', 'चालीस',
+  'इकतालीस', 'बयालीस', 'तैंतालीस', 'चवालीस', 'पैंतालीस', 'छियालीस', 'सैंतालीस', 'अड़तालीस', 'उनचास', 'पचास',
+  'इक्यावन', 'बावन', 'तिरपन', 'चौवन', 'पचपन', 'छप्पन', 'सत्तावन', 'अट्ठावन', 'उनसठ',
+]
+export function speakTimeHi(hhmm: string): string {
+  const n = hhmm.match(/^(\d{1,2}):(\d{2})$/)
+  if (!n) return hhmm
+  const h = Number(n[1])
+  const m = Number(n[2])
+  if (h > 23 || m > 59) return hhmm
+  const part = h < 4 ? 'रात' : h < 12 ? 'सुबह' : h < 16 ? 'दोपहर' : h < 20 ? 'शाम' : 'रात'
+  const hourW = HI_0_59[h % 12 || 12]
+  if (m === 0) return `${part} ${hourW} बजे`
+  return `${part} ${hourW} बजकर ${HI_0_59[m]} मिनट`
+}
+
 export const occurrenceId = (medicineId: string, date: string, time: string) => `${medicineId}-${date}-${time}`
+
+export function parseOccurrenceId(id: string): { medicineId: string; date: string; time: string } | null {
+  const m = id.trim().match(/^(.*)-(\d{4}-\d{2}-\d{2})-([01]\d|2[0-3]):([0-5]\d)$/)
+  if (!m) return null
+  return { medicineId: m[1], date: m[2], time: `${m[3]}:${m[4]}` }
+}
+
+export type OccurrenceCheck =
+  | { ok: true; oid: string }
+  | { ok: false; code: 'stale' | 'taken' | 'not_found' | 'unavailable' | 'permission_denied' }
+
+/** Bind a reminder call only if the occurrence still matches the live medicine schedule. */
+export async function validateCallOccurrence(
+  store: MedicineStore,
+  ownerId: string,
+  memberId: string,
+  occurrenceIdRaw: string,
+  _now: Date,
+): Promise<OccurrenceCheck> {
+  const occurrenceId = occurrenceIdRaw.trim()
+  if (!occurrenceId || occurrenceId.length > 160) return { ok: false, code: 'not_found' }
+  let member: MemberRow | null
+  try { member = await store.getMember(ownerId, memberId) } catch { return { ok: false, code: 'unavailable' } }
+  if (!member || member.owner_id !== ownerId || member.id !== memberId || !member.active) {
+    return { ok: false, code: 'permission_denied' }
+  }
+  let rem: RemRow | null
+  try { rem = await store.getReminder(ownerId, occurrenceId) } catch { return { ok: false, code: 'unavailable' } }
+  if (rem && (rem.owner_id !== ownerId || rem.family_member_id !== memberId)) {
+    return { ok: false, code: 'permission_denied' }
+  }
+  const parsed = parseOccurrenceId(occurrenceId)
+  const medicineId = rem?.medicine_id || parsed?.medicineId
+  if (!medicineId) return { ok: false, code: 'not_found' }
+  let med: MedRow | null
+  try { med = await store.getMedicine(ownerId, medicineId) } catch { return { ok: false, code: 'unavailable' } }
+  if (!med || med.owner_id !== ownerId || med.family_member_id !== memberId) return { ok: false, code: 'not_found' }
+  if (!ACTIVE.has(med.status)) return { ok: false, code: 'stale' }
+  const tz = rem?.time_zone || member.time_zone || 'Asia/Kolkata'
+  const originalClock = parsed?.time
+    || (rem?.original_scheduled_for ? clockOf(new Date(rem.original_scheduled_for), tz) : '')
+    || (rem ? clockOf(new Date(rem.scheduled_for), tz) : '')
+  const times = (med.times ?? []).filter((t) => TIME_RE.test(t))
+  if (!originalClock || !times.includes(originalClock)) return { ok: false, code: 'stale' }
+  if (rem && ['completed', 'taken'].includes(rem.status)) return { ok: false, code: 'taken' }
+  if (rem && ['skipped', 'cancelled', 'declined'].includes(rem.status)) return { ok: false, code: 'stale' }
+  return { ok: true, oid: occurrenceId }
+}
 
 export function faceOf(status: string, when: Date, now: Date): Face {
   if (status === 'completed' || status === 'taken') return 'taken'
@@ -188,6 +260,7 @@ function viewMed(m: MedRow) {
     food: foodLabel(m.food),
     times,
     times_spoken: times.map(speakTime),
+    times_spoken_hi: times.map(speakTimeHi),
     status: m.status,
     active: ACTIVE.has(m.status),
   }
@@ -201,19 +274,25 @@ interface Dose {
   dose: string
   time: string
   time_spoken: string
+  time_spoken_hi: string
   status: Face
   scheduled_for: string
 }
 
+function doseView(clock: string, extra: Omit<Dose, 'time' | 'time_spoken' | 'time_spoken_hi'>): Dose {
+  return { ...extra, time: clock, time_spoken: speakTime(clock), time_spoken_hi: speakTimeHi(clock) }
+}
+
 function buildDoses(meds: MedRow[], rems: RemRow[], day: string, tz: string, now: Date): Dose[] {
   const active = meds.filter((m) => isActiveMed(m, day))
-  const byKey = new Map<string, RemRow>()
+  const byId = new Map<string, RemRow>()
+  const byOrig = new Map<string, RemRow>()
   for (const r of rems) {
     if (!r.medicine_id) continue
-    const when = new Date(r.scheduled_for)
-    if (dateKey(when, r.time_zone || tz) !== day) continue
-    byKey.set(`${r.medicine_id}|${clockOf(when, r.time_zone || tz)}`, r)
-    byKey.set(r.id, r)
+    byId.set(r.id, r)
+    const zone = r.time_zone || tz
+    const orig = r.original_scheduled_for ? clockOf(new Date(r.original_scheduled_for), zone) : clockOf(new Date(r.scheduled_for), zone)
+    byOrig.set(`${r.medicine_id}|${orig}`, r)
   }
   const out: Dose[] = []
   for (const m of active) {
@@ -221,26 +300,32 @@ function buildDoses(meds: MedRow[], rems: RemRow[], day: string, tz: string, now
       const [hh, mm] = t.split(':').map(Number)
       const [y, mo, d] = day.split('-').map(Number)
       const when = zonedToUtc(y, mo, d, hh, mm, tz)
-      const rem = byKey.get(`${m.id}|${t}`) ?? byKey.get(occurrenceId(m.id, day, t))
+      const rem = byId.get(occurrenceId(m.id, day, t)) ?? byOrig.get(`${m.id}|${t}`)
       const at = rem ? new Date(rem.scheduled_for) : when
+      const clock = rem ? clockOf(at, rem.time_zone || tz) : t
       const status = rem ? faceOf(rem.status, at, now) : faceOf('scheduled', when, now)
-      out.push({
+      out.push(doseView(clock, {
         occurrence_id: rem?.id ?? occurrenceId(m.id, day, t),
         medicine_id: m.id,
         name: m.name,
         strength: m.strength,
         dose: m.dose || '1 tablet',
-        time: rem ? clockOf(at, rem.time_zone || tz) : t,
-        time_spoken: speakTime(rem ? clockOf(at, rem.time_zone || tz) : t),
         status,
         scheduled_for: at.toISOString(),
-      })
+      }))
     }
   }
   return out.sort((a, b) => a.time.localeCompare(b.time))
 }
 
-function matchDose(doses: Dose[], params: Record<string, unknown>): Dose[] {
+function matchDose(doses: Dose[], params: Record<string, unknown>, boundOid?: string): Dose[] {
+  if (boundOid) {
+    const parsed = parseOccurrenceId(boundOid)
+    return doses.filter((d) =>
+      d.occurrence_id === boundOid
+      || (parsed != null && d.medicine_id === parsed.medicineId && d.time === parsed.time),
+    )
+  }
   const oid = typeof params.occurrence_id === 'string' ? params.occurrence_id : ''
   const mid = typeof params.medicine_id === 'string' ? params.medicine_id : ''
   const name = typeof params.medicine_name === 'string' ? params.medicine_name.trim().toLowerCase() : ''
@@ -253,6 +338,21 @@ function matchDose(doses: Dose[], params: Record<string, unknown>): Dose[] {
     if (!oid && !mid && !name && !time) return false
     return true
   })
+}
+
+function publicDose(d: Dose) {
+  return {
+    occurrence_id: d.occurrence_id,
+    medicine_id: d.medicine_id,
+    medicine: d.name,
+    name: d.name,
+    strength: d.strength,
+    dose: d.dose,
+    time: d.time,
+    time_spoken: d.time_spoken,
+    time_spoken_hi: d.time_spoken_hi,
+    status: d.status,
+  }
 }
 
 const confirmed = (p: Record<string, unknown>) => p.confirmed === true || p.confirmed === 'true' || p.confirm === true
@@ -306,6 +406,39 @@ export async function runMedicineTool(
   }
 
   const doses = buildDoses(meds, rems, day, tz, ctx.now)
+  const boundOid = ctx.claims.oid
+  const triggerHits = boundOid ? matchDose(doses, {}, boundOid) : []
+  const trigger = triggerHits.length === 1 ? triggerHits[0] : undefined
+  const staleBound = !!boundOid && !trigger
+
+  if (name === 'get_triggering_dose') {
+    if (!boundOid) {
+      const next = doses.find((d) => d.status === 'due' || d.status === 'overdue' || d.status === 'snoozed')
+        ?? doses.find((d) => d.status === 'upcoming')
+      return {
+        ok: true, tool: name, ...head,
+        trigger: next ? publicDose(next) : null,
+        note: next ? 'No reminder was bound to this call. This is the current pending dose from the database.' : 'No pending dose is on the current schedule.',
+      }
+    }
+    if (staleBound || !trigger) {
+      return {
+        ok: false, code: 'not_found', speak_in: speak,
+        message: 'This reminder is no longer on the current schedule. I will not announce a medicine or time.',
+      }
+    }
+    if (trigger.status === 'taken' || trigger.status === 'skipped') {
+      return {
+        ok: false, code: 'not_found', speak_in: speak,
+        message: 'This dose is already recorded. I will not announce it as due.',
+      }
+    }
+    return {
+      ok: true, tool: name, ...head,
+      trigger: publicDose(trigger),
+      note: `Speak the time as ${trigger.time_spoken_hi} (${trigger.time}). Use only this database occurrence.`,
+    }
+  }
 
   if (name === 'get_medicine_schedule') {
     return {
@@ -320,10 +453,17 @@ export async function runMedicineTool(
   }
 
   if (name === 'get_next_medicine_dose') {
-    const next = doses.find((d) => d.status === 'due' || d.status === 'overdue' || d.status === 'snoozed' || d.status === 'upcoming')
+    if (staleBound) {
+      return {
+        ok: false, code: 'not_found', speak_in: speak,
+        message: 'This reminder is no longer on the current schedule. I will not announce a medicine or time.',
+      }
+    }
+    const next = trigger ?? doses.find((d) => d.status === 'due' || d.status === 'overdue' || d.status === 'snoozed' || d.status === 'upcoming')
     return {
       ok: true, tool: name, ...head,
-      next: next ? { medicine: next.name, strength: next.strength, dose: next.dose, time: next.time, time_spoken: next.time_spoken, status: next.status, occurrence_id: next.occurrence_id } : null,
+      next: next ? publicDose(next) : null,
+      bound_to_trigger: !!trigger,
     }
   }
 
@@ -338,6 +478,7 @@ export async function runMedicineTool(
         title: r.title,
         time: clockOf(new Date(r.scheduled_for), r.time_zone || tz),
         time_spoken: speakTime(clockOf(new Date(r.scheduled_for), r.time_zone || tz)),
+        time_spoken_hi: speakTimeHi(clockOf(new Date(r.scheduled_for), r.time_zone || tz)),
         status: faceOf(r.status, new Date(r.scheduled_for), ctx.now),
         at: r.completed_at || r.skipped_at || r.scheduled_for,
       }))
@@ -345,18 +486,24 @@ export async function runMedicineTool(
   }
 
   if (name === 'mark_medicine_taken' || name === 'snooze_medicine_reminder') {
-    const hits = matchDose(doses, params)
+    if (staleBound) {
+      return { ok: false, code: 'not_found', speak_in: speak, message: 'This reminder is no longer on the current schedule.' }
+    }
+    const hits = matchDose(doses, params, boundOid)
     if (!hits.length) return { ok: false, code: 'not_found', message: 'I could not match that to a scheduled dose. Please say the medicine name and time.', speak_in: speak }
     if (hits.length > 1) return { ok: false, code: 'needs_clarification', message: 'More than one dose matches. Which medicine and which time?', speak_in: speak }
+    const d = hits[0]
+    if (d.status === 'taken' || d.status === 'skipped') {
+      return { ok: false, code: 'invalid', speak_in: speak, message: 'That dose is already recorded.' }
+    }
     if (!confirmed(params)) {
-      const d = hits[0]
       return {
         ok: false, code: 'needs_confirmation', speak_in: speak,
-        message: `Please confirm: mark ${d.name} ${d.strength} at ${d.time_spoken} as ${name === 'mark_medicine_taken' ? 'taken' : 'snoozed'}?`,
+        message: `Please confirm: mark ${d.name} ${d.strength} at ${d.time_spoken_hi} (${d.time}) as ${name === 'mark_medicine_taken' ? 'taken' : 'snoozed'}?`,
         occurrence_id: d.occurrence_id,
       }
     }
-    const rem = await ensureRem(store, ctx, member, hits[0], tz)
+    const rem = await ensureRem(store, ctx, member, d, tz)
     if (!isRem(rem)) return rem
     if (rem.owner_id !== ctx.claims.uid || rem.family_member_id !== member.id) return deny()
     try {
@@ -367,7 +514,7 @@ export async function runMedicineTool(
           completed_at: ctx.now.toISOString(),
           completion: { via: 'voice', basis: 'user-reported', confirmed: true },
         })
-        return { ok: true, tool: name, ...head, dose: { ...hits[0], status: 'taken' }, reminder_id: saved.id }
+        return { ok: true, tool: name, ...head, dose: publicDose({ ...d, status: 'taken' }), reminder_id: saved.id }
       }
       const minutes = [5, 10, 15].includes(Number(params.minutes)) ? Number(params.minutes) : 10
       const until = new Date(ctx.now.getTime() + minutes * 60000)
@@ -377,9 +524,10 @@ export async function runMedicineTool(
         scheduled_for: until.toISOString(),
         snooze_history: [...(rem.snooze_history ?? []), { at: ctx.now.toISOString(), minutes, to: until.toISOString() }],
       })
+      const clock = clockOf(until, tz)
       return {
         ok: true, tool: name, ...head,
-        dose: { ...hits[0], status: 'snoozed', time: clockOf(until, tz), time_spoken: speakTime(clockOf(until, tz)) },
+        dose: publicDose({ ...d, status: 'snoozed', time: clock, time_spoken: speakTime(clock), time_spoken_hi: speakTimeHi(clock), scheduled_for: until.toISOString() }),
         snoozed_until: until.toISOString(),
         reminder_id: saved.id,
       }
@@ -392,6 +540,7 @@ export async function runMedicineTool(
 }
 
 export const MEDICINE_TOOL_NAMES: ToolName[] = [
+  'get_triggering_dose',
   'get_medicine_schedule',
   'get_todays_medicine_status',
   'get_next_medicine_dose',

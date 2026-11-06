@@ -10,6 +10,8 @@ export interface ToolClaims {
   rel: ToolRel
   ag: ToolAgent
   exp: number
+  /** Server-validated triggering occurrence id. Never taken from the model. */
+  oid?: string
 }
 
 const enc = new TextEncoder()
@@ -55,6 +57,7 @@ export async function verifyToolSession(secret: string, token: string): Promise<
     if (claims.exp < Math.floor(Date.now() / 1000)) return null
     if (!['self', 'mother', 'father'].includes(claims.rel)) return null
     if (!['mummy', 'papa', 'self'].includes(claims.ag)) return null
+    if (claims.oid != null && (typeof claims.oid !== 'string' || claims.oid.length > 160)) return null
     return claims
   } catch {
     return null

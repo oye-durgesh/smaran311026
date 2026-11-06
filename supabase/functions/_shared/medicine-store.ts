@@ -20,6 +20,15 @@ export function supabaseMedicineStore(db: SupabaseClient): MedicineStore {
       if (error) throw error
       return (data ?? []) as MedRow[]
     },
+    async getMedicine(ownerId, id) {
+      const { data, error } = await db.from('medicines')
+        .select('id, owner_id, family_member_id, name, strength, dose, frequency, times, food, status, start_date, end_date')
+        .eq('owner_id', ownerId)
+        .eq('id', id)
+        .maybeSingle()
+      if (error) throw error
+      return (data ?? null) as MedRow | null
+    },
     async listReminders(ownerId, memberId, fromIso, toIso) {
       const { data, error } = await db.from('member_reminders')
         .select('id, owner_id, family_member_id, medicine_id, scheduled_for, original_scheduled_for, time_zone, status, title, snooze_history, completed_at, skipped_at, completion, idempotency_key')

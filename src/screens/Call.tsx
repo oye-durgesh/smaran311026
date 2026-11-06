@@ -103,6 +103,7 @@ export default function Call() {
         setLines([]);
         void voiceService.tryLiveCall({
           profileId,
+          occurrenceId: event?.kind === 'medicine' ? event.id : undefined,
           signal: ac.signal,
           onMode: (m) => { if (!cancelled) go(m === 'speaking' ? 'speaking' : 'listening'); },
           onDisconnect: () => { if (!cancelled) go('reconnecting'); },
@@ -121,6 +122,7 @@ export default function Call() {
     } else if (stage === 'connecting' && !offline) {
       void voiceService.tryLiveCall({
         profileId,
+        occurrenceId: event?.kind === 'medicine' ? event.id : undefined,
         onMode: (m) => { if (!cancelled) go(m === 'speaking' ? 'speaking' : 'listening'); },
         onDisconnect: () => { if (!cancelled) go('done'); },
         onError: (message) => { if (!cancelled) { toast.show(message); go('done'); } },
