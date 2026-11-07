@@ -7,6 +7,7 @@ import { backendConfigured, currentSession } from './backend'
 import { memberId } from './mapping'
 import { scheduleRowId } from './scheduleUtils'
 import { deleteRemote, liveUserId, persistNow, schedulePush } from './sync'
+export { liveUserId }
 
 export type DataMode = 'demo' | 'live'
 export function dataMode(): DataMode { return liveUserId() ? 'live' : 'demo' }

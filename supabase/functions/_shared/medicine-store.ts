@@ -1,5 +1,5 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
-import type { MedRow, MedicineStore, MemberRow, RemRow } from './medicine-tools.ts'
+import { reminderUpsertPayload, type MedRow, type MedicineStore, type MemberRow, type RemRow } from './medicine-tools.ts'
 
 export function supabaseMedicineStore(db: SupabaseClient): MedicineStore {
   return {
@@ -49,24 +49,7 @@ export function supabaseMedicineStore(db: SupabaseClient): MedicineStore {
       return (data ?? null) as RemRow | null
     },
     async upsertReminder(row) {
-      const { data, error } = await db.from('member_reminders').upsert({
-        id: row.id,
-        owner_id: row.owner_id,
-        family_member_id: row.family_member_id,
-        kind: 'medicine',
-        title: row.title || 'Medicine reminder',
-        medicine_id: row.medicine_id,
-        schedule_id: row.medicine_id ? `sch_${row.medicine_id}_${(row.scheduled_for || '').slice(11, 16).replace(':', '')}` : null,
-        scheduled_for: row.scheduled_for,
-        original_scheduled_for: row.original_scheduled_for || row.scheduled_for,
-        time_zone: row.time_zone,
-        status: row.status,
-        snooze_history: row.snooze_history ?? [],
-        completed_at: row.completed_at ?? null,
-        skipped_at: row.skipped_at ?? null,
-        completion: row.completion ?? null,
-        idempotency_key: row.idempotency_key || row.id,
-      }).select('*').single()
+      const { data, error } = await db.from('member_reminders').upsert(reminderUpsertPayload(row)).select('*').single()
       if (error) throw error
       return data as RemRow
     },

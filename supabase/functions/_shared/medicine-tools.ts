@@ -355,7 +355,13 @@ function publicDose(d: Dose) {
   }
 }
 
-const confirmed = (p: Record<string, unknown>) => p.confirmed === true || p.confirmed === 'true' || p.confirm === true
+const confirmed = (p: Record<string, unknown>) =>
+  p.confirmed === true || p.confirmed === 'true' || p.confirmed === 1 || p.confirmed === '1' || p.confirm === true
+
+export function snoozeMinutes(p: Record<string, unknown>): number {
+  const n = Number(p.minutes ?? p.snooze_minutes ?? p.mins)
+  return [5, 10, 15].includes(n) ? n : 10
+}
 
 async function ensureRem(store: MedicineStore, ctx: ToolCtx, member: MemberRow, dose: Dose, tz: string): Promise<RemRow | ToolResult> {
   const existing = await store.getReminder(ctx.claims.uid, dose.occurrence_id).catch(() => null)
@@ -514,9 +520,13 @@ export async function runMedicineTool(
           completed_at: ctx.now.toISOString(),
           completion: { via: 'voice', basis: 'user-reported', confirmed: true },
         })
-        return { ok: true, tool: name, ...head, dose: publicDose({ ...d, status: 'taken' }), reminder_id: saved.id }
+        const dose = publicDose({ ...d, status: 'taken' })
+        return {
+          ok: true, tool: name, ...head, dose, reminder_id: saved.id,
+          message: `${d.name} ${d.strength} at ${d.time_spoken_hi} (${d.time}) is recorded as taken, as you confirmed.`,
+        }
       }
-      const minutes = [5, 10, 15].includes(Number(params.minutes)) ? Number(params.minutes) : 10
+      const minutes = snoozeMinutes(params)
       const until = new Date(ctx.now.getTime() + minutes * 60000)
       const saved = await store.upsertReminder({
         ...rem,
@@ -529,7 +539,9 @@ export async function runMedicineTool(
         ok: true, tool: name, ...head,
         dose: publicDose({ ...d, status: 'snoozed', time: clock, time_spoken: speakTime(clock), time_spoken_hi: speakTimeHi(clock), scheduled_for: until.toISOString() }),
         snoozed_until: until.toISOString(),
+        snooze_minutes: minutes,
         reminder_id: saved.id,
+        message: `${d.name} is snoozed for ${minutes} minutes. Next reminder is ${speakTimeHi(clock)} (${clock}).`,
       }
     } catch {
       return unavailable()
@@ -537,6 +549,28 @@ export async function runMedicineTool(
   }
 
   return { ok: false, code: 'invalid', message: 'Unknown tool.' }
+}
+
+/** Edge writes must not invent schedule_id; a fake id fails the medicine_schedules FK. */
+export function reminderUpsertPayload(row: RemRow) {
+  return {
+    id: row.id,
+    owner_id: row.owner_id,
+    family_member_id: row.family_member_id,
+    kind: 'medicine' as const,
+    title: row.title || 'Medicine reminder',
+    medicine_id: row.medicine_id,
+    schedule_id: null as string | null,
+    scheduled_for: row.scheduled_for,
+    original_scheduled_for: row.original_scheduled_for || row.scheduled_for,
+    time_zone: row.time_zone,
+    status: row.status,
+    snooze_history: row.snooze_history ?? [],
+    completed_at: row.completed_at ?? null,
+    skipped_at: row.skipped_at ?? null,
+    completion: row.completion ?? null,
+    idempotency_key: row.idempotency_key || row.id,
+  }
 }
 
 export const MEDICINE_TOOL_NAMES: ToolName[] = [

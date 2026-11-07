@@ -7,7 +7,7 @@ import { MEDICINE_TOOL_NAMES } from './medicine-tools.ts'
 import { logStage, sanitizeErrorMessage } from './safe-log.ts'
 
 const HARDCODED = /\b(metformin|amlodipine|ecosprin|atorvastatin|ramesh|05:51|08:30\s*pm|12:25|3:52|15:52)\b/i
-export const TOOLS_PROMPT_VERSION = 'SMARAN_TOOLS_V4'
+export const TOOLS_PROMPT_VERSION = 'SMARAN_TOOLS_V5'
 export const DEFAULT_TOOLS_WEBHOOK_URL = 'https://oqcfpdfhtwvpirhcusbi.supabase.co/functions/v1/elevenlabs-tools'
 const MARKER = `<!-- ${TOOLS_PROMPT_VERSION} -->`
 const GENERIC_FIRST = 'नमस्ते, मैं साथी हूँ, एक एआई साथी। मैं आपके स्मारण रिकॉर्ड से अभी की दवाई और समय देखती हूँ।'
@@ -30,7 +30,8 @@ export const TOOL_PROMPT_ADDENDUM = [
   'On every medicine or reminder turn, call get_triggering_dose first (then get_todays_medicine_status if needed). Use only the returned records.',
   'If this call was started from a reminder, announce that exact occurrence. Do not announce a different upcoming dose.',
   'Speak the time in Hindi using time_spoken_hi from the tool result. Also keep the exact HH:MM from the time field. Never invent or round the minutes.',
-  'If a tool fails, is unavailable, or says the reminder is no longer on the schedule, say you cannot verify the current schedule. Do not invent a list or reuse a previous conversation.',
+  'If a tool fails, is unavailable, or says the reminder is no longer on the schedule, speak the tool message field. Never say “technical issue”. Do not invent a list or reuse a previous conversation.',
+  'Never say a snooze or taken action succeeded unless the tool result has succeeded=true. If succeeded=false, speak the message and do not claim the reminder changed.',
   'Never give independent medical advice or change a prescribed dose.',
   'mark_medicine_taken and snooze_medicine_reminder require the person to confirm the specific medicine and time. Set confirmed=true only after they confirm.',
   'Always pass smaran_session unchanged from the conversation dynamic variables. Never invent a family_member_id.',

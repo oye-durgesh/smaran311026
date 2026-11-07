@@ -20,6 +20,8 @@ export type TimeOfDayName = 'morning' | 'afternoon' | 'evening' | 'night'
 /** One medicine as read from the document. Anything not written in the document is empty/null and flagged. */
 export interface ExtractedMedicine {
   name: string
+  brandName: string
+  genericName: string
   strength: string
   dose: string
   frequency: FrequencyName | null
@@ -28,11 +30,15 @@ export interface ExtractedMedicine {
   food: 'before' | 'with' | 'after' | null
   duration: 'ongoing' | 'course' | null
   courseDays?: number
+  startDate: string
+  endDate: string
   notes: string
+  specialInstructions: string
   sourceText: string
   flags: MedFlagName[]
   lowConfidence: boolean
   evidence: Partial<Record<'dose' | 'frequency' | 'timing' | 'food' | 'duration', string>>
+  confidence?: number
 }
 
 export interface ExtractionDocument {
@@ -72,6 +78,9 @@ export interface ExtractionJob {
   result?: ExtractionOutput
   createdAt: string
   updatedAt: string
+  documentId?: string
+  familyMemberId?: string
+  contentSha256?: string
 }
 
 export interface JobStore {

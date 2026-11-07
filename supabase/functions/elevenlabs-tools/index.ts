@@ -4,31 +4,16 @@
 import { corsHeaders, json, serviceClient, timingSafeEqual } from '../_shared/http.ts'
 import { configuredAgent, type AgentWho } from '../_shared/elevenlabs.ts'
 import { verifyToolSession, type ToolAgent } from '../_shared/tool-session.ts'
-import { MEDICINE_TOOL_NAMES, runMedicineTool, type ToolName } from '../_shared/medicine-tools.ts'
+import { runMedicineTool } from '../_shared/medicine-tools.ts'
 import { supabaseMedicineStore } from '../_shared/medicine-store.ts'
-
-const isTool = (n: string): n is ToolName => (MEDICINE_TOOL_NAMES as string[]).includes(n)
-
-function pick(obj: Record<string, unknown>, keys: string[]): unknown {
-  for (const k of keys) {
-    if (obj[k] != null && obj[k] !== '') return obj[k]
-  }
-  return undefined
-}
-
-function parseBody(raw: unknown): { tool?: string; params: Record<string, unknown>; agentId?: string; conversationId?: string } {
-  const b = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
-  const nested = (b.parameters ?? b.params ?? b.tool_call ?? {}) as Record<string, unknown>
-  const tc = (nested.parameters ?? nested.params ?? nested) as Record<string, unknown>
-  const params = { ...b, ...tc }
-  const tool = String(pick(b, ['tool_name', 'name', 'tool']) ?? pick(nested, ['tool_name', 'name']) ?? '')
-  return {
-    tool,
-    params,
-    agentId: String(pick(b, ['agent_id', 'agentId']) ?? ''),
-    conversationId: String(pick(b, ['conversation_id', 'conversationId']) ?? ''),
-  }
-}
+import {
+  elevenLabsToolEnvelope,
+  isMedicineTool,
+  logToolInvoke,
+  parseElevenLabsToolBody,
+  toolHttpStatus,
+} from '../_shared/tools-webhook.ts'
+import { logStage } from '../_shared/safe-log.ts'
 
 function agentFromId(id: string): ToolAgent | null {
   const env = (k: string) => Deno.env.get(k)
@@ -41,31 +26,67 @@ function agentFromId(id: string): ToolAgent | null {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, toolHttpStatus('bad_method'))
 
-  const expected = (Deno.env.get('SMARAN_TOOL_SECRET') ?? Deno.env.get('ELEVENLABS_API_KEY') ?? '').trim()
+  const expected = (Deno.env.get('SMARAN_TOOL_SECRET') ?? '').trim()
   const got = (req.headers.get('X-Smaran-Tool-Secret') ?? req.headers.get('xi-webhook-secret') ?? '').trim()
   if (!expected || !got || !timingSafeEqual(expected, got)) {
-    return json({ ok: false, code: 'permission_denied', message: 'I cannot verify the current schedule right now.' }, 401)
+    logToolInvoke({ tool: req.headers.get('X-Smaran-Tool-Name') ?? '', status: 401, code: 'permission_denied', succeeded: false, hasSession: false })
+    return json(elevenLabsToolEnvelope('unknown', {
+      ok: false, code: 'permission_denied',
+      message: 'I cannot verify the current schedule right now. Please try the reminder again.',
+    }), toolHttpStatus('auth'))
   }
 
   let raw: unknown
   try { raw = await req.json() } catch { raw = {} }
-  const parsed = parseBody(raw)
-  const headerTool = req.headers.get('X-Smaran-Tool-Name') ?? ''
-  const tool = isTool(headerTool) ? headerTool : isTool(parsed.tool) ? parsed.tool : null
-  if (!tool) return json({ ok: false, code: 'invalid', message: 'Unknown tool.' }, 400)
+  const parsed = parseElevenLabsToolBody(raw, req.headers.get('X-Smaran-Tool-Name') ?? '')
+  const tool = isMedicineTool(parsed.tool) ? parsed.tool : null
+  if (!tool) {
+    logToolInvoke({ tool: parsed.tool, status: 200, code: 'invalid', succeeded: false, hasSession: false })
+    return json(elevenLabsToolEnvelope(parsed.tool || 'unknown', {
+      ok: false, code: 'invalid', message: 'I do not have that medicine action. Please ask about today’s medicines or this reminder.',
+    }), toolHttpStatus('executed'))
+  }
 
-  const token = String(parsed.params.smaran_session ?? parsed.params.session ?? '')
+  const token = String(parsed.params.smaran_session ?? '')
   const claims = await verifyToolSession(expected, token)
-  if (!claims) return json({ ok: false, code: 'permission_denied', message: 'I cannot verify the current schedule right now.' }, 403)
+  if (!claims) {
+    logToolInvoke({
+      tool, status: 200, code: 'permission_denied', succeeded: false, hasSession: false,
+      confirmed: parsed.params.confirmed, minutes: parsed.params.minutes,
+      occurrence: typeof parsed.params.occurrence_id === 'string',
+      medicineId: typeof parsed.params.medicine_id === 'string',
+    })
+    return json(elevenLabsToolEnvelope(tool, {
+      ok: false, code: 'permission_denied',
+      message: 'I cannot verify who this call is for. Please start the reminder call again from Smaran.',
+    }), toolHttpStatus('executed'))
+  }
 
   const webhookAgent = parsed.agentId ? agentFromId(parsed.agentId) : null
   const store = supabaseMedicineStore(serviceClient())
   try {
     const result = await runMedicineTool(store, { claims, webhookAgent, now: new Date() }, tool, parsed.params)
-    return json(result, result.ok ? 200 : result.code === 'unavailable' ? 503 : result.code === 'permission_denied' ? 403 : 200)
-  } catch {
-    return json({ ok: false, code: 'unavailable', message: 'I cannot verify the current schedule right now.' }, 503)
+    const body = elevenLabsToolEnvelope(tool, result)
+    const inner = body.result as { succeeded?: boolean; code?: string }
+    logToolInvoke({
+      tool,
+      status: 200,
+      code: String(inner.code ?? (result.ok ? 'ok' : 'error')),
+      succeeded: inner.succeeded === true,
+      hasSession: true,
+      confirmed: parsed.params.confirmed,
+      minutes: parsed.params.minutes,
+      occurrence: !!(claims.oid || parsed.params.occurrence_id),
+      medicineId: typeof parsed.params.medicine_id === 'string',
+    })
+    return json(body, toolHttpStatus('executed'))
+  } catch (e) {
+    logStage('elevenlabs-tools', tool, { status: 200, error: e })
+    return json(elevenLabsToolEnvelope(tool, {
+      ok: false, code: 'unavailable',
+      message: 'I cannot verify the current schedule right now. I have not marked it taken or snoozed.',
+    }), toolHttpStatus('executed'))
   }
 })

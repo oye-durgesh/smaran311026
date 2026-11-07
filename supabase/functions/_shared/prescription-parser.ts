@@ -177,7 +177,9 @@ function toExtracted(f: Fields, sourceText: string): ExtractedMedicine {
     .filter(Boolean).join(' ')
   return {
     name: f.name, strength: f.strength, dose: f.dose, frequency: f.frequency ?? (f.prn ? 'custom' : null), times: f.times, timeOfDay: f.timeOfDay,
-    food: f.food, duration: f.duration, courseDays: f.durationUnclear ? undefined : f.courseDays, notes, sourceText: sourceText.trim(), flags,
+    food: f.food, duration: f.duration, courseDays: f.durationUnclear ? undefined : f.courseDays,
+    startDate: '', endDate: '', notes, specialInstructions: '', brandName: '', genericName: '',
+    sourceText: sourceText.trim(), flags,
     lowConfidence: noisy, evidence: f.evidence,
   }
 }

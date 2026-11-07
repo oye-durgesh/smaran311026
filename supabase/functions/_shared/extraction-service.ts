@@ -31,7 +31,17 @@ export class ServiceError extends Error {
   constructor(code: ErrorCode, message: string, status = 400, retryAfterSec?: number) { super(message); this.code = code; this.status = status; this.retryAfterSec = retryAfterSec }
 }
 
-export interface SubmitInput { ownerId: string; file: Blob; fileName: string; mime: string; size: number; language: string }
+export interface SubmitInput {
+  ownerId: string
+  file: Blob
+  fileName: string
+  mime: string
+  size: number
+  language: string
+  documentId?: string
+  familyMemberId?: string
+  contentSha256?: string
+}
 
 export async function submitExtraction(d: ServiceDeps, i: SubmitInput): Promise<ExtractionJob> {
   const bad = validateUpload({ name: i.fileName, type: i.mime, size: i.size })
@@ -42,6 +52,7 @@ export async function submitExtraction(d: ServiceDeps, i: SubmitInput): Promise<
   const job: ExtractionJob = {
     id: idOf(d), ownerId: i.ownerId, provider: 'sarvam', sarvamJobId: null, fileName: i.fileName, mime: i.mime, size: i.size,
     language: i.language, outputFormat: fmt, status: 'submitted', createdAt: t, updatedAt: t,
+    documentId: i.documentId, familyMemberId: i.familyMemberId, contentSha256: i.contentSha256,
   }
   await d.jobs.create(job)
   try {

@@ -119,7 +119,7 @@ export const extractionIssues = (s: AppState) => (s.extraction?.items ?? []).fil
 /** Activate: only when every extracted medicine has been confirmed. */
 export function activateExtraction(s: AppState): AppState {
   if (!s.extraction || extractionIssues(s).length) return s;
-  const incoming = s.extraction.items.map((m) => ({ ...m, id: uid('med'), profileId: s.activeProfileId, demo: true }));
+  const incoming = s.extraction.items.map((m) => ({ ...m, id: m.id.startsWith('med_') ? m.id : uid('med'), profileId: s.activeProfileId, demo: liveFlag(), status: 'ready' as const }));
   const keep = s.medicines.filter(
     (m) => !(m.profileId === s.activeProfileId && incoming.some((i) => i.name === m.name && i.strength === m.strength)),
   );
@@ -129,9 +129,17 @@ export function activateExtraction(s: AppState): AppState {
 /** "Save and finish later": keep everything, but unconfirmed ones stay out of the schedule. */
 export function saveExtractionDraft(s: AppState): AppState {
   if (!s.extraction) return s;
-  const incoming = s.extraction.items.map((m) => ({ ...m, id: uid('med'), profileId: s.activeProfileId, demo: true }));
+  const incoming = s.extraction.items.map((m) => ({ ...m, id: uid('med'), profileId: s.activeProfileId, demo: liveFlag() }));
   const keep = s.medicines.filter(
     (m) => !(m.profileId === s.activeProfileId && incoming.some((i) => i.name === m.name && i.strength === m.strength)),
+  );
+  return regenerateEvents({ ...s, medicines: [...keep, ...incoming], extraction: null });
+}
+
+export function applyConfirmedMedicines(s: AppState, incoming: Medicine[]): AppState {
+  if (!incoming.length) return { ...s, extraction: null };
+  const keep = s.medicines.filter(
+    (m) => !(m.profileId === s.activeProfileId && incoming.some((i) => i.id === m.id || (i.name === m.name && i.strength === m.strength))),
   );
   return regenerateEvents({ ...s, medicines: [...keep, ...incoming], extraction: null });
 }

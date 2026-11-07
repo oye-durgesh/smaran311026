@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Camera, Mic, Plus, ScanLine } from 'lucide-react';
 import { useStore } from '../data/store';
@@ -8,6 +8,8 @@ import Gen from './Gen';
 import * as med from '../services/medicineService';
 import { fmtTime, fmtTimeShort, nextLabel } from '../services/reminderService';
 import { FREQ_OPTIONS, normalizeClock, resizeTimes, SUGGESTED_TOD, validateTimes } from '../services/scheduleUtils';
+import { applyJobToExtraction, confirmLivePrescription, flagLabels, pollPrescriptionJob, speakExtraction, startLivePrescription, validatePrescriptionFile } from '../services/prescriptionService';
+import { liveUserId } from '../services/dataService';
 import type { FoodInstruction, Frequency, Medicine, TimeOfDay } from '../types';
 import { SAMPLE_MED_VOICE } from '../data/voiceSamples';
 
@@ -64,18 +66,91 @@ export function MedicineSetup() {
 // ---------- Upload (08) & processing (09) ----------
 export function UploadRx() {
   const nav = useNavigate();
-  const { update } = useStore();
-  const start = () => { update(med.startExtraction); nav('/medicines/processing'); };
+  const { state, update } = useStore();
+  const toast = useToast();
+  const cam = useRef<HTMLInputElement>(null);
+  const gal = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const onFile = async (file?: File | null) => {
+    if (!file || busy) return;
+    const bad = validatePrescriptionFile(file);
+    if (bad) { toast.show(bad); return; }
+    setBusy(true);
+    try {
+      const previewUrl = URL.createObjectURL(file);
+      if (!liveUserId()) {
+        update((s) => {
+          const n = med.startExtraction(s);
+          return n.extraction ? { ...n, extraction: { ...n.extraction, previewUrl, live: false } } : n;
+        });
+        nav('/medicines/processing');
+        return;
+      }
+      const started = await startLivePrescription(file, state);
+      if (started.job?.result?.medicines?.length) {
+        update((s) => applyJobToExtraction(s, started.job!, { previewUrl: started.previewUrl, prescriptionId: started.prescriptionId }));
+        nav('/medicines/review');
+        return;
+      }
+      update((s) => ({
+        ...s,
+        extraction: {
+          items: [],
+          reviewed: [],
+          live: true,
+          jobId: started.jobId,
+          prescriptionId: started.prescriptionId,
+          previewUrl: started.previewUrl,
+        },
+      }));
+      nav('/medicines/processing');
+    } catch (e) {
+      toast.show(e instanceof Error ? e.message : 'Could not start reading the prescription.');
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
-    <Gen id="08" actions={{ Skip: () => nav('/home'), 'Upload prescription': start, Camera: start, Gallery: start, 'Add medicine manually': () => nav('/medicines/new'), 'Handwritten prescriptions may need manual confirmation.': () => nav('/errors/partial') }} />
+    <>
+      <input ref={cam} type="file" accept="image/jpeg,image/png,application/pdf" capture="environment" hidden onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ''; }} />
+      <input ref={gal} type="file" accept="image/jpeg,image/png,application/pdf" hidden onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ''; }} />
+      <Gen id="08" actions={{ Skip: () => nav('/home'), 'Upload prescription': () => gal.current?.click(), Camera: () => cam.current?.click(), Gallery: () => gal.current?.click(), 'Add medicine manually': () => nav('/medicines/new'), 'Handwritten prescriptions may need manual confirmation.': () => nav('/errors/partial') }} />
+      {toast.node}
+    </>
   );
 }
 export function Processing() {
   const nav = useNavigate();
+  const { state, update } = useStore();
   useEffect(() => {
-    const t = setTimeout(() => nav('/medicines/review', { replace: true }), 2600);
-    return () => clearTimeout(t);
-  }, [nav]);
+    const jobId = state.extraction?.jobId;
+    if (!state.extraction?.live || !jobId) {
+      const t = setTimeout(() => nav('/medicines/review', { replace: true }), 2600);
+      return () => clearTimeout(t);
+    }
+    let dead = false;
+    const tick = async () => {
+      try {
+        const job = await pollPrescriptionJob(jobId);
+        if (dead) return;
+        const terminalFail = ['failed', 'rejected', 'timed_out', 'cancelled'].includes(job.status);
+        if (terminalFail || job.errorCode === 'no_medicines') {
+          nav(job.errorCode === 'no_medicines' ? '/errors/partial' : '/errors', { replace: true });
+          return;
+        }
+        if ((job.status === 'completed' || job.status === 'partially_completed') && job.result?.medicines?.length) {
+          update((s) => applyJobToExtraction(s, job, {}));
+          nav('/medicines/review', { replace: true });
+          return;
+        }
+        window.setTimeout(() => { void tick(); }, Math.max(2, job.retryAfterSec || 3) * 1000);
+      } catch {
+        if (!dead) nav('/errors', { replace: true });
+      }
+    };
+    void tick();
+    return () => { dead = true; };
+  }, [nav, state.extraction?.jobId, state.extraction?.live, update]);
   return <Gen id="09" actions={{}} />;
 }
 export function RxPartial() {
@@ -112,7 +187,27 @@ export function Review() {
         <div style={{ padding: '4px 12px', background: '#E7EDE2', borderRadius: 999, fontSize: 13, color: C.deep, fontWeight: 500 }}>{done} of {ex.items.length} reviewed</div>
       </div>
       <div className="sf" style={{ fontSize: 24, marginTop: 20 }}>Medicines found</div>
-      <div style={{ fontSize: 13, color: C.faint, marginTop: 6 }}>Review each medicine before setting reminders. <DemoTag label="DEMO EXTRACTION" /></div>
+      <div style={{ fontSize: 13, color: C.faint, marginTop: 6 }}>
+        Review each medicine before setting reminders. {ex.live ? 'Reminders stay off until you confirm.' : <DemoTag label="DEMO EXTRACTION" />}
+      </div>
+      {ex.previewUrl && (
+        <div style={{ marginTop: 14, borderRadius: 14, overflow: 'hidden', border: `1px solid ${C.line}`, background: '#fff', maxHeight: 160 }}>
+          {ex.previewUrl.startsWith('blob:') && !ex.previewUrl.includes('pdf') ? (
+            <img src={ex.previewUrl} alt="Uploaded prescription" style={{ width: '100%', maxHeight: 160, objectFit: 'contain', display: 'block' }} />
+          ) : <div style={{ padding: 12, fontSize: 13, color: C.muted }}>Uploaded prescription on file</div>}
+        </div>
+      )}
+      {(ex.document?.patientName || ex.document?.doctorName || ex.document?.prescriptionDate) && (
+        <div style={{ marginTop: 12, fontSize: 13, color: C.muted, lineHeight: 1.45 }}>
+          {ex.document.patientName && <div>Patient: {ex.document.patientName}</div>}
+          {ex.document.doctorName && <div>Doctor: {ex.document.doctorName}</div>}
+          {ex.document.prescriptionDate && <div>Date: {ex.document.prescriptionDate}</div>}
+        </div>
+      )}
+      {ex.warnings && ex.warnings.length > 0 && (
+        <div role="status" style={{ marginTop: 12, fontSize: 13, color: C.terra }}>{ex.warnings.join(' ')}</div>
+      )}
+      <TextLink onClick={() => speakExtraction(state)}>Read extracted details aloud</TextLink>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20 }}>
         {ex.items.map((m) => <ReviewCard key={m.id} m={m} onReview={() => nav(`/medicines/schedule/${m.id}?x=1`)} onRemove={() => update((s) => med.removeExtracted(s, m.id))} />)}
       </div>
@@ -164,7 +259,8 @@ export function ScheduleEditor() {
   const save = () => {
     const checked = validateTimes(f.times);
     if (checked.error) { setErr(checked.error); return; }
-    const next = { ...f, times: checked.times };
+    if (fromRx && !f.dose.trim()) { setErr('Dosage is not written. Enter it from the prescription or ask the doctor.'); return; }
+    const next = { ...f, times: checked.times, reviewFlags: [] };
     if (fromRx) update((s) => med.confirmExtracted(s, f.id, next));
     else update((s) => med.updateMedicine(s, f.id, { ...next, status: f.status === 'paused' ? 'paused' : 'ready' }));
     nav(-1);
@@ -176,6 +272,7 @@ export function ScheduleEditor() {
         <div><div style={{ fontSize: 13, color: C.faint }}>Edit schedule for</div><div className="sf" style={{ fontSize: 20 }}>{med.medicineLabel(f)}</div></div>
       </div>
       {f.originalRx && <div style={{ fontSize: 12, color: C.terra, marginTop: 12 }}>Original Rx text kept: "{f.originalRx}"</div>}
+      {fromRx && flagLabels(f.reviewFlags).map((t) => <div key={t} role="status" style={{ fontSize: 13, color: C.terra, marginTop: 8 }}>{t}</div>)}
       <Label mt={24}>Strength</Label><Field value={f.strength} onChange={(v) => set({ strength: v })} placeholder="e.g. 50mg" />
       <Label>Dose</Label><Field value={f.dose} onChange={(v) => set({ dose: v })} placeholder="e.g. 1 tablet" />
       <Label>Frequency</Label>
@@ -226,7 +323,17 @@ export function Finalize() {
   return (
     <Screen bg={C.flow} pad="20px 24px 24px" footer={
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <PillBtn tone="sage" disabled={issues.length > 0 || ex.items.length === 0} onClick={() => { update(med.activateExtraction); nav('/medicines/done'); }}>Confirm &amp; activate reminders</PillBtn>
+        <PillBtn tone="sage" disabled={issues.length > 0 || ex.items.length === 0} onClick={() => {
+          if (ex.live) {
+            void confirmLivePrescription(state).then((rows) => {
+              update((s) => med.applyConfirmedMedicines(s, rows));
+              nav('/medicines/done');
+            }).catch((e: Error) => { window.alert(e.message); });
+            return;
+          }
+          update(med.activateExtraction);
+          nav('/medicines/done');
+        }}>Confirm &amp; activate reminders</PillBtn>
         <div style={{ textAlign: 'center' }}><TextLink color={C.muted} onClick={() => { update(med.saveExtractionDraft); nav('/home'); }}>Save and finish later</TextLink></div>
       </div>
     }>

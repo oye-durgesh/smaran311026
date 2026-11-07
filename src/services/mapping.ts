@@ -99,15 +99,16 @@ export const medicineRow = (m: Medicine, uid: string) => ({
   duration: m.duration === 'Fixed course' ? 'course' : 'ongoing',
   course_days: m.courseDays ?? null,
   status: MED_STATUS[m.status],
-  source: 'manual',
+  source: m.prescriptionId ? 'prescription' : 'manual',
   source_text: m.originalRx ?? null,
   start_date: m.startedOn || null,
   end_date: m.endedOn || null,
-  stock_settings: { gradient: m.gradient, timeOfDay: m.timeOfDay },
+  prescription_ref: m.prescriptionId ?? null,
+  stock_settings: { gradient: m.gradient, timeOfDay: m.timeOfDay, brandName: m.brandName, genericName: m.genericName },
 })
 
 export const medicineFromRow = (r: Record<string, unknown>, fallback: ProfileId): Medicine => {
-  const extra = (r.stock_settings ?? {}) as { gradient?: [string, string]; timeOfDay?: Medicine['timeOfDay'] }
+  const extra = (r.stock_settings ?? {}) as { gradient?: [string, string]; timeOfDay?: Medicine['timeOfDay']; brandName?: string; genericName?: string }
   const rel = String(r.family_member_id ?? '').split('_')[0] as ProfileId
   const profileId: ProfileId = rel === 'mother' || rel === 'father' || rel === 'self' ? rel : fallback
   return {
@@ -128,6 +129,9 @@ export const medicineFromRow = (r: Record<string, unknown>, fallback: ProfileId)
     status: MED_STATUS_BACK(String(r.status)),
     completed: String(r.status) === 'completed' || String(r.status) === 'removed',
     originalRx: (r.source_text as string) || undefined,
+    brandName: extra.brandName,
+    genericName: extra.genericName,
+    prescriptionId: (r.prescription_ref as string) || undefined,
     gradient: extra.gradient ?? ['#D4A57C', '#B87D5A'],
   }
 }

@@ -31,6 +31,10 @@ export interface Medicine {
   status: MedicineStatus;
   completed?: boolean;
   originalRx?: string; // original extracted text, preserved
+  brandName?: string;
+  genericName?: string;
+  reviewFlags?: string[];
+  prescriptionId?: string;
   gradient: [string, string];
   demo?: boolean;
 }
@@ -154,6 +158,16 @@ export interface AppState {
   changeRequests: ChangeRequest[];
   voiceHistory: VoiceEntry[];
   settings: Settings;
-  /** Prescription extraction demo state (not yet confirmed medicines). */
-  extraction: { items: Medicine[]; reviewed: string[] } | null;
+  /** Prescription extraction (demo or live). Reminders are not active until the user confirms. */
+  extraction: {
+    items: Medicine[];
+    reviewed: string[];
+    live?: boolean;
+    jobId?: string;
+    prescriptionId?: string;
+    previewUrl?: string;
+    warnings?: string[];
+    document?: { patientName: string; doctorName: string; prescriptionDate: string };
+    error?: string;
+  } | null;
 }

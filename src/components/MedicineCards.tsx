@@ -28,6 +28,9 @@ export function ReviewCard({ m, onReview, onRemove }: { m: Medicine; onReview: (
       </div>
       <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>{m.dose} · {m.frequency} · {m.food === 'No instruction' && !ok ? 'Timing unclear' : m.food === 'No instruction' ? m.timeOfDay : m.food}</div>
       {m.originalRx && <div style={{ fontSize: 12, color: ok ? '#A89584' : C.terra, marginTop: 4, fontStyle: ok ? 'italic' : undefined }}>Rx: "{m.originalRx}"</div>}
+      {!ok && m.reviewFlags && m.reviewFlags.length > 0 && (
+        <div role="status" style={{ fontSize: 12, color: C.terra, marginTop: 6 }}>Needs check: {m.reviewFlags.filter((f) => f !== 'food_missing' && f !== 'duration_unclear').join(', ') || 'review details'}</div>
+      )}
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         <button data-act="1" onClick={onReview} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: C.card, border: `1px solid ${C.line}`, borderRadius: 999, fontSize: 13, fontWeight: 500, font: 'inherit', cursor: 'pointer', minHeight: 36 }}>
           <Check size={13} /> {ok ? 'Edit' : 'Review'}

@@ -31,46 +31,81 @@ function minConf(ann: unknown, keys: string[]): number | undefined {
 }
 
 function lineFromFields(m: Record<string, unknown>): string {
-  return ['name', 'strength', 'dosage', 'frequency', 'intake_timing', 'food_instructions', 'duration', 'additional_instructions']
+  return ['name', 'brand_name', 'generic_name', 'strength', 'dosage', 'frequency', 'intake_timing', 'prescribed_times', 'food_instructions', 'duration', 'additional_instructions', 'special_instructions']
     .map((k) => str(m[k])).filter(Boolean).join(' ')
 }
 
+function writtenTimes(raw: string, parsed: string[]): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  const add = (t: string) => {
+    const m = t.trim().match(/^([01]?\d|2[0-3]):([0-5]\d)$/)
+    if (!m) return
+    const n = `${m[1].padStart(2, '0')}:${m[2]}`
+    if (seen.has(n)) return
+    seen.add(n)
+    out.push(n)
+  }
+  for (const part of raw.split(/[,;/]| and /i)) add(part)
+  for (const t of parsed) add(t)
+  return out
+}
+
 function fromRow(m: Record<string, unknown>, ann: unknown, sourceText: string): ExtractedMedicine | null {
-  const name = str(m.name)
+  const name = str(m.name) || str(m.brand_name) || str(m.generic_name)
   if (!name) return null
   const parsed = parseMedicineLine(lineFromFields(m))
   const unclear = str(m.unclear_or_missing)
-  const extraNotes = [str(m.additional_instructions), unclear].filter(Boolean).join(' ')
-  const c = minConf(ann, ['name', 'strength', 'dosage', 'frequency', 'intake_timing', 'food_instructions', 'duration'])
+  const special = [str(m.special_instructions), str(m.additional_instructions)].filter(Boolean).join(' ')
+  const extraNotes = [special, unclear].filter(Boolean).join(' ')
+  const c = minConf(ann, ['name', 'strength', 'dosage', 'frequency', 'intake_timing', 'prescribed_times', 'food_instructions', 'duration'])
   const noisy = (c != null && c < LOW_CONFIDENCE) || !!unclear || /[�?]|\[?(?:illegible|unclear)\]?/i.test(sourceText)
+  const brandName = str(m.brand_name)
+  const genericName = str(m.generic_name)
+  const startDate = str(m.start_date)
+  const endDate = str(m.end_date)
 
   if (parsed && parsed.name) {
     const flags = new Set(toFlags(parsed, noisy))
     if (noisy) flags.add('low_confidence')
     if (unclear && !flags.has('low_confidence')) flags.add('low_confidence')
+    const times = writtenTimes(str(m.prescribed_times), parsed.times)
+    if (times.length) {
+      flags.delete('timing_unclear')
+      flags.delete('exact_time_needed')
+    } else {
+      flags.add(parsed.timeOfDay.length ? 'exact_time_needed' : 'timing_unclear')
+    }
     return {
-      name: parsed.name || name,
-      strength: parsed.strength,
-      dose: parsed.dose,
+      name: str(m.name) || parsed.name || name,
+      brandName,
+      genericName,
+      strength: parsed.strength || str(m.strength),
+      dose: parsed.dose || str(m.dosage),
       frequency: parsed.frequency ?? (parsed.prn ? 'custom' : null),
-      times: parsed.times,
+      times,
       timeOfDay: parsed.timeOfDay,
       food: parsed.food,
       duration: parsed.duration,
       courseDays: parsed.durationUnclear ? undefined : parsed.courseDays,
+      startDate,
+      endDate,
       notes: [parsed.prn ? 'Written as needed (SOS/PRN): no fixed schedule.' : '', parsed.doseConflict ? 'Different amounts at different times; check the dose.' : '', extraNotes].filter(Boolean).join(' '),
+      specialInstructions: special,
       sourceText,
       flags: [...flags],
       lowConfidence: noisy,
       evidence: parsed.evidence,
+      confidence: c,
     }
   }
 
   return {
-    name, strength: str(m.strength), dose: str(m.dosage), frequency: null, times: [], timeOfDay: [],
-    food: null, duration: null, notes: extraNotes, sourceText,
+    name, brandName, genericName, strength: str(m.strength), dose: str(m.dosage), frequency: null,
+    times: writtenTimes(str(m.prescribed_times), []), timeOfDay: [],
+    food: null, duration: null, startDate, endDate, notes: extraNotes, specialInstructions: special, sourceText,
     flags: ['strength_missing', 'dose_missing', 'frequency_unclear', 'timing_unclear', 'food_missing', 'duration_unclear', ...(noisy ? ['low_confidence' as const] : [])],
-    lowConfidence: noisy, evidence: {},
+    lowConfidence: noisy, evidence: {}, confidence: c,
   }
 }
 

@@ -5,7 +5,8 @@ import type { ExtractionJob, JobStore } from './extraction-types.ts'
 const toRow = (j: ExtractionJob) => ({
   id: j.id, owner_id: j.ownerId, provider: j.provider, sarvam_job_id: j.sarvamJobId, file_name: j.fileName, mime: j.mime, size_bytes: j.size,
   language: j.language, output_format: j.outputFormat, status: j.status, pages: j.pages ?? null, error_code: j.errorCode ?? null,
-  error_message: j.errorMessage ?? null, retry_after_sec: j.retryAfterSec ?? null, result: j.result ?? null, document_id: (j as ExtractionJob & { documentId?: string }).documentId ?? null,
+  error_message: j.errorMessage ?? null, retry_after_sec: j.retryAfterSec ?? null, result: j.result ?? null,
+  document_id: j.documentId ?? null, family_member_id: j.familyMemberId ?? null, content_sha256: j.contentSha256 ?? null,
 })
 // deno-lint-ignore no-explicit-any
 const fromRow = (r: any): ExtractionJob => ({
@@ -13,6 +14,7 @@ const fromRow = (r: any): ExtractionJob => ({
   language: r.language, outputFormat: r.output_format, status: r.status, pages: r.pages ?? undefined, errorCode: r.error_code ?? undefined,
   errorMessage: r.error_message ?? undefined, retryAfterSec: r.retry_after_sec ?? undefined, result: r.result ?? undefined,
   createdAt: new Date(r.created_at).toISOString(), updatedAt: new Date(r.updated_at).toISOString(),
+  documentId: r.document_id ?? undefined, familyMemberId: r.family_member_id ?? undefined, contentSha256: r.content_sha256 ?? undefined,
 })
 
 export function supabaseJobStore(db: SupabaseClient): JobStore {
@@ -26,7 +28,7 @@ export function supabaseJobStore(db: SupabaseClient): JobStore {
     async update(id, patch) {
       const COL: Record<string, string> = {
         sarvamJobId: 'sarvam_job_id', status: 'status', pages: 'pages', errorCode: 'error_code', errorMessage: 'error_message',
-        retryAfterSec: 'retry_after_sec', result: 'result',
+        retryAfterSec: 'retry_after_sec', result: 'result', documentId: 'document_id', familyMemberId: 'family_member_id', contentSha256: 'content_sha256',
       }
       const row: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(patch)) if (COL[k]) row[COL[k]] = v === undefined ? null : v // undefined clears the column

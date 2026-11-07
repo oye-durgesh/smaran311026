@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { signToolSession, verifyToolSession, relAllowedForAgent } from '../supabase/functions/_shared/tool-session.ts'
-import { MEDICINE_TOOL_NAMES, runMedicineTool, speakTimeHi, validateCallOccurrence, type MedRow, type MedicineStore, type MemberRow, type RemRow } from '../supabase/functions/_shared/medicine-tools.ts'
+import { MEDICINE_TOOL_NAMES, reminderUpsertPayload, runMedicineTool, snoozeMinutes, speakTimeHi, validateCallOccurrence, type MedRow, type MedicineStore, type MemberRow, type RemRow } from '../supabase/functions/_shared/medicine-tools.ts'
+import { elevenLabsToolEnvelope, parseElevenLabsToolBody, toolHttpStatus } from '../supabase/functions/_shared/tools-webhook.ts'
 import { applyToolPrompt, ensureAgentTools, medicineToolConfig, promptHasHardcodedSchedule, resetEnsureAgentToolsCache, webhookUrl } from '../supabase/functions/_shared/register-tools.ts'
 import { issueElevenLabsSession } from '../supabase/functions/_shared/issue-session.ts'
 import { sanitizeErrorMessage } from '../supabase/functions/_shared/safe-log.ts'
@@ -626,6 +627,96 @@ async function main() {
     const s = sanitizeErrorMessage('xi-api-key abc Authorization Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaabbbbccccdddd.eeeefghi smaran_session=tok signed_url=https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=x')
     assert.equal(s.includes('eyJ'), false)
     assert.equal(/xi-api-key|Bearer eyJ|smaran_session=tok|signed_url=https/i.test(s), false)
+  })
+
+  await check('reminder upsert does not invent a schedule_id that would fail FK', () => {
+    const payload = reminderUpsertPayload({
+      id: 'med-2026-10-31-05:51', owner_id: A, family_member_id: momA, medicine_id: 'met',
+      scheduled_for: '2026-10-31T00:21:00.000Z', time_zone: 'Asia/Kolkata', status: 'snoozed',
+    })
+    assert.equal(payload.schedule_id, null)
+    assert.equal(payload.status, 'snoozed')
+    assert.equal(String(payload.schedule_id || '').startsWith('sch_'), false)
+  })
+
+  await check('ElevenLabs parameter envelope supplies smaran_session and tool name', () => {
+    const p = parseElevenLabsToolBody({
+      tool_call_id: 'call_1',
+      tool_name: 'snooze_medicine_reminder',
+      conversation_id: 'conv_1',
+      parameters: { confirmed: true, minutes: '10', smaran_session: 'v1.payload.sig' },
+    }, '')
+    assert.equal(p.tool, 'snooze_medicine_reminder')
+    assert.equal(p.params.smaran_session, 'v1.payload.sig')
+    assert.equal(p.params.confirmed, true)
+    assert.equal(snoozeMinutes(p.params), 10)
+  })
+
+  await check('header tool name wins and dynamic_variables session is accepted', () => {
+    const p = parseElevenLabsToolBody({
+      parameters: { confirmed: true },
+      dynamic_variables: { smaran_session: 'v1.payload.sig' },
+    }, 'mark_medicine_taken')
+    assert.equal(p.tool, 'mark_medicine_taken')
+    assert.equal(p.params.smaran_session, 'v1.payload.sig')
+  })
+
+  await check('tool envelope is HTTP 200 with succeeded false for confirmation', () => {
+    const env = elevenLabsToolEnvelope('snooze_medicine_reminder', {
+      ok: false, code: 'needs_confirmation', message: 'Please confirm snooze for Amlodipine at 09:00?',
+    })
+    const r = env.result as { succeeded: boolean; message: string; code: string }
+    assert.equal(toolHttpStatus('executed'), 200)
+    assert.equal(toolHttpStatus('auth'), 401)
+    assert.equal(r.succeeded, false)
+    assert.match(r.message, /confirm/i)
+    assert.equal(r.code, 'needs_confirmation')
+  })
+
+  await check('all seven medicine tools run without claiming false success', async () => {
+    const ctx = { claims: await claims(A, momA, 'mother', 'aml-2026-10-31-09:00'), webhookAgent: 'mummy' as const, now: new Date('2026-10-31T09:05:00+05:30') }
+    const names = [...MEDICINE_TOOL_NAMES]
+    assert.equal(names.length, 7)
+    for (const name of names) {
+      const r = await runMedicineTool(store, ctx, name, name.includes('snooze') || name.includes('taken') ? {} : {})
+      if (name === 'mark_medicine_taken' || name === 'snooze_medicine_reminder') {
+        assert.equal(r.ok, false)
+        if (!r.ok) assert.equal(r.code, 'needs_confirmation')
+      } else {
+        assert.equal(r.ok, true)
+      }
+    }
+  })
+
+  await check('snooze and taken succeed only after confirm, and speak a real result', async () => {
+    store.meds = store.meds.map((m) => m.id === 'aml' ? { ...m, times: ['09:00'] } : m)
+    const ctx = { claims: await claims(A, momA, 'mother', 'aml-2026-10-31-09:00'), webhookAgent: 'mummy' as const, now: new Date('2026-10-31T09:05:00+05:30') }
+    const denied = await runMedicineTool(store, ctx, 'snooze_medicine_reminder', { minutes: '10' })
+    assert.equal(denied.ok, false)
+    const envDenied = elevenLabsToolEnvelope('snooze_medicine_reminder', denied)
+    assert.equal((envDenied.result as { succeeded: boolean }).succeeded, false)
+    const ok = await runMedicineTool(store, ctx, 'snooze_medicine_reminder', { confirmed: 'true', minutes: '10' })
+    assert.equal(ok.ok, true)
+    if (!ok.ok) return
+    assert.match(String(ok.message), /snoozed/i)
+    const envOk = elevenLabsToolEnvelope('snooze_medicine_reminder', ok)
+    assert.equal((envOk.result as { succeeded: boolean }).succeeded, true)
+    assert.equal((envOk.result as { snooze_minutes: number }).snooze_minutes, 10)
+  })
+
+  await check('failed reminder write does not report snooze success', async () => {
+    const boom = new Mem()
+    boom.members = store.members
+    boom.meds = store.meds
+    boom.upsertReminder = async () => { throw new Error('23503 foreign key') }
+    const ctx = { claims: await claims(A, momA, 'mother', 'aml-2026-10-31-09:00'), webhookAgent: 'mummy' as const, now: new Date('2026-10-31T09:05:00+05:30') }
+    const r = await runMedicineTool(boom, ctx, 'snooze_medicine_reminder', { confirmed: true, minutes: 10 })
+    assert.equal(r.ok, false)
+    if (r.ok) return
+    assert.equal(r.code, 'unavailable')
+    const env = elevenLabsToolEnvelope('snooze_medicine_reminder', r)
+    assert.equal((env.result as { succeeded: boolean }).succeeded, false)
+    assert.match((env.result as { message: string }).message, /not marked|cannot verify/i)
   })
 
   console.log('\nAll medicine-tool checks passed.')
