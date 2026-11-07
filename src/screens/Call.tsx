@@ -5,7 +5,8 @@ import Gen from './Gen';
 import { C, Dialog, PillBtn, useToast } from '../components/ui';
 import { fmtTime, markTaken, nextReminder, snooze } from '../services/reminderService';
 import { medicineLabel } from '../services/medicineService';
-import { endActiveLive, getActiveLive, voiceService, type VoiceLine } from '../services/voiceService';
+import { endActiveLive, getActiveLive, voiceService, type CallPhase, type VoiceLine } from '../services/voiceService';
+import { unlockCallAudio } from '../services/callAudio';
 import { isVoiceRole } from '../services/identity';
 import type { AppState, ProfileId, ReminderEvent } from '../types';
 
@@ -32,8 +33,18 @@ const recordCall = (s: AppState, e: ReminderEvent | undefined): AppState => {
   };
 };
 
-function LiveOverlay({ lines, error, onRetry }: { lines: VoiceLine[]; error: string; onRetry?: () => void }) {
-  if (!error && lines.length === 0) return null;
+const PHASE_LABEL: Record<CallPhase, string> = {
+  requesting_mic: 'Requesting microphone…',
+  connecting: 'Connecting…',
+  listening: 'Listening…',
+  user_speaking: 'You are speaking…',
+  sathi_speaking: 'Sathi speaking…',
+  mic_error: 'Sathi cannot hear the microphone. Check permission and that you are not muted.',
+};
+
+function LiveOverlay({ lines, error, phase, onRetry }: { lines: VoiceLine[]; error: string; phase?: CallPhase; onRetry?: () => void }) {
+  const showPhase = !!phase && !error;
+  if (!error && lines.length === 0 && !showPhase) return null;
   return (
     <div style={{ position: 'absolute', left: 16, right: 16, bottom: 88, zIndex: 8, pointerEvents: error ? 'auto' : 'none' }}>
       {error && (
@@ -41,6 +52,11 @@ function LiveOverlay({ lines, error, onRetry }: { lines: VoiceLine[]; error: str
           <div style={{ fontSize: 14, fontWeight: 500, color: C.err }}>Could not connect</div>
           <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.4 }}>{error}</div>
           {onRetry && <div style={{ marginTop: 12, pointerEvents: 'auto' }}><PillBtn tone="sage" onClick={onRetry}>Retry</PillBtn></div>}
+        </div>
+      )}
+      {showPhase && (
+        <div role={phase === 'mic_error' ? 'alert' : 'status'} style={{ background: 'rgba(46,36,27,.78)', color: phase === 'mic_error' ? '#E8C4C0' : '#F5EFE6', borderRadius: 14, padding: '8px 12px', marginBottom: 8, fontSize: 13 }}>
+          {PHASE_LABEL[phase]}
         </div>
       )}
       {!error && (lines.length > 0) && (
@@ -67,6 +83,7 @@ export default function Call() {
   const [textDlg, setTextDlg] = useState(false);
   const [error, setError] = useState('');
   const [lines, setLines] = useState<VoiceLine[]>([]);
+  const [phase, setPhase] = useState<CallPhase | undefined>();
   const liveVoice = isVoiceRole(profileId);
   const toast = useToast();
   const go = (s: string) => nav(`/call/${s}${qs}`, { replace: s !== 'incoming' });
@@ -101,10 +118,12 @@ export default function Call() {
         const ac = new AbortController();
         setError('');
         setLines([]);
+        setPhase('requesting_mic');
         void voiceService.tryLiveCall({
           profileId,
           occurrenceId: event?.kind === 'medicine' ? event.id : undefined,
           signal: ac.signal,
+          onPhase: (p) => { if (!cancelled) setPhase(p); },
           onMode: (m) => { if (!cancelled) go(m === 'speaking' ? 'speaking' : 'listening'); },
           onDisconnect: () => { if (!cancelled) go('reconnecting'); },
           onTranscript: (line) => { if (!cancelled) setLines((prev) => [...prev.slice(-20), line]); },
@@ -135,7 +154,15 @@ export default function Call() {
       runDemo(stage);
     }
 
-    return () => { cancelled = true; stop?.(); };
+    return () => {
+      // Keep the live WebSocket when the UI moves connecting → speaking/listening.
+      if (getActiveLive()) {
+        stop?.();
+        return;
+      }
+      cancelled = true;
+      stop?.();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, offline, event?.id, profileId]);
 
@@ -150,37 +177,38 @@ export default function Call() {
   };
   const lastAgent = [...lines].reverse().find((l) => l.role === 'agent')?.text;
   const lastUser = [...lines].reverse().find((l) => l.role === 'user')?.text;
-  const liveBubble = lastAgent
-    || (lastUser ? `You: ${lastUser}` : '')
-    || (stage === 'speaking' ? 'Speaking…' : stage === 'listening' ? 'Listening…' : 'Connecting…');
+  const liveBubble = (stage === 'listening' || phase === 'user_speaking') && lastUser
+    ? `You: ${lastUser}`
+    : lastAgent
+    || (stage === 'speaking' ? 'Sathi speaking…' : stage === 'listening' ? 'Listening…' : 'Connecting…');
   const muteRep = {
     Mute: muted ? 'Unmute' : 'Mute',
     ...(liveVoice ? { [CANNED_AGENT]: liveBubble } : {}),
   };
-  const retry = () => { setError(''); go('connecting'); };
+  const retry = () => { setError(''); setPhase('requesting_mic'); void unlockCallAudio(); go('connecting'); };
 
   switch (stage) {
     case 'incoming':
       return (
         <Gen id="17" replace={{ 'Time for Metformin': `Time for ${name}` }} actions={{
-          Answer: () => go('connecting'),
+          Answer: () => { void unlockCallAudio(); go('connecting'); },
           'Not now': () => nav('/home'),
           'Remind me in 15 minutes': () => { if (event) update((s) => snooze(s, event.id, 15)); nav('/home'); },
         }} />
       );
     case 'connecting':
-      return <><Gen id="34" actions={{}} /><LiveOverlay lines={lines} error={error} /></>;
+      return <><Gen id="34" actions={{}} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} /></>;
     case 'listening':
-      return <><Gen id="35" replace={muteRep} actions={{ Mute: mute, End: end, Unmute: mute }} /><LiveOverlay lines={lines} error={error} />{toast.node}</>;
+      return <><Gen id="35" replace={muteRep} actions={{ Mute: mute, End: end, Unmute: mute }} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} />{toast.node}</>;
     case 'speaking':
-      return <><Gen id="36" replace={muteRep} actions={{ Mute: mute, Unmute: mute, Repeat: () => { if (!liveVoice) { go('speaking'); toast.show('Sathi will say that again'); } }, End: end }} /><LiveOverlay lines={lines} error={error} />{toast.node}</>;
+      return <><Gen id="36" replace={muteRep} actions={{ Mute: mute, Unmute: mute, Repeat: () => { if (!liveVoice) { go('speaking'); toast.show('Sathi will say that again'); } }, End: end }} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} />{toast.node}</>;
     case 'active':
-      return <><Gen id="18" replace={muteRep} actions={{ Mute: mute, Unmute: mute, Repeat: () => { if (!liveVoice) go('speaking'); }, End: end }} /><LiveOverlay lines={lines} error={error} />{toast.node}</>;
+      return <><Gen id="18" replace={muteRep} actions={{ Mute: mute, Unmute: mute, Repeat: () => { if (!liveVoice) go('speaking'); }, End: end }} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} />{toast.node}</>;
     case 'reconnecting':
       return (
         <>
           <Gen id="37" actions={{ 'Try again': () => { update((s) => ({ ...s, settings: { ...s.settings, deviceOnline: true } })); retry(); }, 'Respond by text': () => setTextDlg(true) }} />
-          <LiveOverlay lines={[]} error={error || (liveVoice ? 'The live call did not connect.' : '')} onRetry={liveVoice ? retry : undefined} />
+          <LiveOverlay lines={[]} error={error || (liveVoice ? 'The live call did not connect.' : '')} phase={liveVoice ? phase : undefined} onRetry={liveVoice ? retry : undefined} />
           {textDlg && (
             <Dialog title={`Did you take ${name}?`} body="Your answer is saved as self-reported. Smaran can't check it independently." confirm="I took it" cancel="Not yet" onCancel={() => { setTextDlg(false); nav('/home'); }} onConfirm={() => { update((s) => recordCall(s, event)); nav(`/call/done${qs}`, { replace: true }); }} />
           )}
