@@ -222,6 +222,7 @@ async function requestMicPermission(signal?: AbortSignal): Promise<void> {
 
 export async function tryLiveCall(opts: Parameters<VoiceService['tryLiveCall']>[0]): Promise<LiveCall | null> {
   if (!isVoiceRole(opts.profileId)) return null
+  if (activeLive) return activeLive
   try {
     if (!backendConfigured()) throw new BackendError('Sign in to talk to Sathi. Mother and Father use a real voice session, which needs a Smaran account.', 401, 'not_signed_in')
     if (!(await hasSession())) throw new BackendError('Sign in to talk to Sathi. Mother and Father use a real voice session, which needs a Smaran account.', 401, 'not_signed_in')
@@ -250,9 +251,7 @@ export async function tryLiveCall(opts: Parameters<VoiceService['tryLiveCall']>[
       throw new BackendError('The voice agent did not match this family member. The call was not started.', 502, 'agent_mismatch')
     }
     const { Conversation } = await import('@elevenlabs/client')
-    const previous = activeLive
-    activeLive = null
-    if (previous) await previous.end().catch(() => undefined)
+    if (activeLive) return activeLive
     voiceLog('ws_connecting', { connectionType: 'websocket' })
     let peakVad = 0
     let listenStartedAt = 0

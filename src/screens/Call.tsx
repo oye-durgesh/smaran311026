@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useStore } from '../data/store';
 import Gen from './Gen';
@@ -8,19 +8,28 @@ import { medicineLabel } from '../services/medicineService';
 import { endActiveLive, getActiveLive, voiceService, type CallPhase, type VoiceLine } from '../services/voiceService';
 import { unlockCallAudio } from '../services/callAudio';
 import { isVoiceRole } from '../services/identity';
+import { SHOW_CALL_TRANSCRIPTS } from '../services/reminderCall';
 import type { AppState, ProfileId, ReminderEvent } from '../types';
 
 const CANNED_AGENT = '"Achha, main note kar leti hoon ki aapne dawa lene ki pushti ki hai. Aapka agla reminder raat 10 baje hai."';
 
-function useCallEvent(): { event?: ReminderEvent; label: string; name: string; qs: string; profileId: ProfileId } {
+function useCallEvent(): { event?: ReminderEvent; label: string; name: string; qs: string; profileId: ProfileId; occurrenceId?: string } {
   const [q] = useSearchParams();
   const { state } = useStore();
-  const id = q.get('e');
-  const event = (id && state.events.find((e) => e.id === id)) || nextReminder(state, state.activeProfileId) || state.events.find((e) => e.profileId === state.activeProfileId);
-  const m = event && state.medicines.find((x) => x.id === event.medicineId);
-  const fromEvent = event?.profileId ?? state.activeProfileId;
+  const id = q.get('oid') || q.get('e');
+  const med = q.get('med');
+  const event = (id && state.events.find((e) => e.id === id))
+    || (med && state.events.find((e) => e.medicineId === med && e.time === (q.get('t') || e.time) && e.profileId === state.activeProfileId))
+    || nextReminder(state, state.activeProfileId)
+    || state.events.find((e) => e.profileId === state.activeProfileId);
+  const m = (med && state.medicines.find((x) => x.id === med)) || (event && state.medicines.find((x) => x.id === event.medicineId));
+  const fromEvent = (q.get('who') as ProfileId | null) || event?.profileId || state.activeProfileId;
   const profileId: ProfileId = isVoiceRole(state.activeProfileId) ? state.activeProfileId : fromEvent;
-  return { event, label: m ? medicineLabel(m) : 'your medicine', name: m?.name ?? 'your medicine', qs: event ? `?e=${event.id}` : '', profileId };
+  const next = new URLSearchParams(q);
+  if (id) { next.set('e', id); next.set('oid', id); }
+  next.delete('go');
+  const qs = next.toString() ? `?${next.toString()}` : '';
+  return { event, label: m ? medicineLabel(m) : 'your medicine', name: m?.name ?? 'your medicine', qs, profileId, occurrenceId: id || (event?.kind === 'medicine' ? event.id : undefined) };
 }
 
 const recordCall = (s: AppState, e: ReminderEvent | undefined): AppState => {
@@ -44,7 +53,8 @@ const PHASE_LABEL: Record<CallPhase, string> = {
 
 function LiveOverlay({ lines, error, phase, onRetry }: { lines: VoiceLine[]; error: string; phase?: CallPhase; onRetry?: () => void }) {
   const showPhase = !!phase && !error;
-  if (!error && lines.length === 0 && !showPhase) return null;
+  const showLines = SHOW_CALL_TRANSCRIPTS && !error && lines.length > 0;
+  if (!error && !showLines && !showPhase) return null;
   return (
     <div style={{ position: 'absolute', left: 16, right: 16, bottom: 88, zIndex: 8, pointerEvents: error ? 'auto' : 'none' }}>
       {error && (
@@ -59,7 +69,7 @@ function LiveOverlay({ lines, error, phase, onRetry }: { lines: VoiceLine[]; err
           {PHASE_LABEL[phase]}
         </div>
       )}
-      {!error && (lines.length > 0) && (
+      {showLines && (
         <div style={{ background: 'rgba(46,36,27,.78)', color: '#F5EFE6', borderRadius: 14, padding: '10px 12px', maxHeight: 120, overflow: 'auto' }}>
           {lines.slice(-4).map((l, i) => (
             <div key={i} style={{ fontSize: 13, lineHeight: 1.4, marginTop: i ? 6 : 0 }}>
@@ -78,7 +88,7 @@ export default function Call() {
   const nav = useNavigate();
   const [q] = useSearchParams();
   const { state, update } = useStore();
-  const { event, name, qs, profileId } = useCallEvent();
+  const { event, name, qs, profileId, occurrenceId } = useCallEvent();
   const [muted, setMuted] = useState(false);
   const [textDlg, setTextDlg] = useState(false);
   const [error, setError] = useState('');
@@ -88,8 +98,20 @@ export default function Call() {
   const toast = useToast();
   const go = (s: string) => nav(`/call/${s}${qs}`, { replace: s !== 'incoming' });
   const offline = !state.settings.deviceOnline;
+  const fromDue = q.get('from') === 'due';
+  const autoTried = useRef(false);
 
   useEffect(() => () => { void endActiveLive(); }, []);
+
+  useEffect(() => {
+    if (stage !== 'incoming' || autoTried.current || q.get('go') !== '1') return;
+    if (getActiveLive() || muted || !state.settings.micAllowed) return;
+    const activated = typeof navigator !== 'undefined' && navigator.userActivation?.isActive;
+    if (!activated) return;
+    autoTried.current = true;
+    void unlockCallAudio().then(() => go('connecting')).catch(() => { autoTried.current = false; });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage]);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,7 +143,7 @@ export default function Call() {
         setPhase('requesting_mic');
         void voiceService.tryLiveCall({
           profileId,
-          occurrenceId: event?.kind === 'medicine' ? event.id : undefined,
+          occurrenceId,
           signal: ac.signal,
           onPhase: (p) => { if (!cancelled) setPhase(p); },
           onMode: (m) => { if (!cancelled) go(m === 'speaking' ? 'speaking' : 'listening'); },
@@ -141,7 +163,7 @@ export default function Call() {
     } else if (stage === 'connecting' && !offline) {
       void voiceService.tryLiveCall({
         profileId,
-        occurrenceId: event?.kind === 'medicine' ? event.id : undefined,
+        occurrenceId,
         onMode: (m) => { if (!cancelled) go(m === 'speaking' ? 'speaking' : 'listening'); },
         onDisconnect: () => { if (!cancelled) go('done'); },
         onError: (message) => { if (!cancelled) { toast.show(message); go('done'); } },
@@ -175,23 +197,21 @@ export default function Call() {
       return next;
     });
   };
-  const lastAgent = [...lines].reverse().find((l) => l.role === 'agent')?.text;
-  const lastUser = [...lines].reverse().find((l) => l.role === 'user')?.text;
-  const liveBubble = (stage === 'listening' || phase === 'user_speaking') && lastUser
-    ? `You: ${lastUser}`
-    : lastAgent
-    || (stage === 'speaking' ? 'Sathi speaking…' : stage === 'listening' ? 'Listening…' : 'Connecting…');
   const muteRep = {
     Mute: muted ? 'Unmute' : 'Mute',
-    ...(liveVoice ? { [CANNED_AGENT]: liveBubble } : {}),
+    ...(liveVoice ? { [CANNED_AGENT]: '' } : {}),
   };
+  const hideQuote = liveVoice ? (
+    <style>{`.ph .scr [style*="rgba(255,255,255,.1)"]{display:none!important}`}</style>
+  ) : null;
   const retry = () => { setError(''); setPhase('requesting_mic'); void unlockCallAudio(); go('connecting'); };
 
   switch (stage) {
     case 'incoming':
       return (
-        <Gen id="17" replace={{ 'Time for Metformin': `Time for ${name}` }} actions={{
+        <Gen id="17" replace={{ 'Time for Metformin': `Time for ${name}`, ...(fromDue ? { Answer: 'Start Call' } : {}) }} actions={{
           Answer: () => { void unlockCallAudio(); go('connecting'); },
+          'Start Call': () => { void unlockCallAudio(); go('connecting'); },
           'Not now': () => nav('/home'),
           'Remind me in 15 minutes': () => { if (event) update((s) => snooze(s, event.id, 15)); nav('/home'); },
         }} />
@@ -199,11 +219,11 @@ export default function Call() {
     case 'connecting':
       return <><Gen id="34" actions={{}} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} /></>;
     case 'listening':
-      return <><Gen id="35" replace={muteRep} actions={{ Mute: mute, End: end, Unmute: mute }} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} />{toast.node}</>;
+      return <>{hideQuote}<Gen id="35" replace={muteRep} actions={{ Mute: mute, End: end, Unmute: mute }} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} />{toast.node}</>;
     case 'speaking':
-      return <><Gen id="36" replace={muteRep} actions={{ Mute: mute, Unmute: mute, Repeat: () => { if (!liveVoice) { go('speaking'); toast.show('Sathi will say that again'); } }, End: end }} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} />{toast.node}</>;
+      return <>{hideQuote}<Gen id="36" replace={muteRep} actions={{ Mute: mute, Unmute: mute, Repeat: () => { if (!liveVoice) { go('speaking'); toast.show('Sathi will say that again'); } }, End: end }} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} />{toast.node}</>;
     case 'active':
-      return <><Gen id="18" replace={muteRep} actions={{ Mute: mute, Unmute: mute, Repeat: () => { if (!liveVoice) go('speaking'); }, End: end }} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} />{toast.node}</>;
+      return <>{hideQuote}<Gen id="18" replace={muteRep} actions={{ Mute: mute, Unmute: mute, Repeat: () => { if (!liveVoice) go('speaking'); }, End: end }} /><LiveOverlay lines={lines} error={error} phase={liveVoice ? phase : undefined} />{toast.node}</>;
     case 'reconnecting':
       return (
         <>

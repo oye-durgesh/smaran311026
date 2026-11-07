@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { voiceLog } from '../src/services/callAudio.ts'
 import { classifyVoiceMessage } from '../src/services/voiceService.ts'
+import { SHOW_CALL_TRANSCRIPTS } from '../src/services/reminderCall.ts'
 
 let last: unknown[] = []
 const orig = console.info
@@ -24,4 +25,6 @@ assert.deepEqual(classifyVoiceMessage({ role: 'agent', source: 'ai', message: 'A
 assert.equal(classifyVoiceMessage({ source: 'ai', message: 'I have marked it taken' })?.role, 'agent')
 assert.equal(classifyVoiceMessage({ source: 'user', message: '   ' }), null)
 assert.equal(classifyVoiceMessage({ message: 'fallback without role' })?.role, 'agent')
+assert.equal(SHOW_CALL_TRANSCRIPTS, false)
 console.log('PASS user transcripts are never inferred from agent/AI messages')
+console.log('PASS agent transcript is classified internally and not shown as chat')

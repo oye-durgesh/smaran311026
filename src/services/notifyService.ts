@@ -49,7 +49,11 @@ export function showDoseNotification(title: string, body: string, tag: string): 
   if (!notificationsSupported() || Notification.permission !== 'granted') return false;
   try {
     const n = new Notification(title, { body, tag, silent: false });
-    n.onclick = () => { window.focus(); n.close(); };
+    n.onclick = () => {
+      window.focus();
+      window.dispatchEvent(new CustomEvent('smaran:due-call', { detail: { occurrenceId: tag } }));
+      n.close();
+    };
     return true;
   } catch {
     return false;
