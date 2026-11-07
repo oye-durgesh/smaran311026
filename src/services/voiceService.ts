@@ -272,7 +272,7 @@ export async function tryLiveCall(opts: Parameters<VoiceService['tryLiveCall']>[
         voiceDiag.status = 'connected'
         voiceAudioDiag.wsStatus = 'connected'
         voiceLog('ws_connected', { conversationId: conversationId ? 'yes' : 'no' })
-        void startAgentPlayback().then((ok) => {
+        void startAgentPlayback().then((ok: boolean) => {
           voiceDiag.playbackStarted = voiceAudioDiag.playbackStarted
           voiceDiag.audioContextState = voiceAudioDiag.audioContextState
           voiceDiag.playbackError = voiceAudioDiag.playbackError
